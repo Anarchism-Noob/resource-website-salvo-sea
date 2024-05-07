@@ -10,13 +10,13 @@ cargo run
 
 # Tip
 
-- I'm a rookie, this is my first website written in rusty language and there are a lot of unresolved issues in it. This project is not yet complete, my ability to progress is limited, and I'm stuck with jwt_auth in Router. The project is expected to use USDT as the currency, but I haven't figured out how to implement it yet. (Also: I'd like to make this project run on Docker, but I can't write a dockerfile)
+- I'm a rookie, this is my first website written in rusty language and there are a lot of unresolved issues in it. This project is not yet complete, my ability to progress is limited, and I'm stuck with jwt_auth in Router. The project is expected to use USDT as the currency, but I haven't figured out how to implement it yet. (Also: I'd like to make this project run on Docker, but I can't write a dockerfile). If anyone can help me with these issues, I would be very welcome and happy to.
 
 # Pending
 
 - Docking Rainbow Easy Pay (or uses tron-sdk realization of receipts)
 - Routing Privilege Control
--
+- WebSocket Message Push
 - Web
 
 # Project dependencies
