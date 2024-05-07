@@ -3,6 +3,7 @@ use crate::{app_error::AppError, config::CFG, middleware::jwt};
 use anyhow::Result;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, EncodingKey, Validation};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use salvo::hyper::Uri;
 use salvo::jwt_auth::{ConstDecoder, CookieFinder, HeaderFinder, QueryFinder};
 use salvo::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -22,7 +23,8 @@ pub async fn jwt_auth_middleware(
     let token = depot.get::<&str>("jwt-token").copied().unwrap();
 
     let jwt_model = jwt::parse_token(&token).unwrap();
+    
+    let uri: Uri = req.uri().to_string().parse().unwrap();
 
-    let check_custom = check_user_custom(jwt_model.user_id.clone()).await;
-    let check_admin = check_user_admin(jwt_model.user_id.clone()).await;
+    
 }

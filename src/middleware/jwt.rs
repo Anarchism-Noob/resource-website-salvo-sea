@@ -76,3 +76,4 @@ pub fn parse_token(token: &str) -> Result<JwtClaims, anyhow::Error> {
         Err(e) => Err(anyhow::anyhow!("{:?}", e)),
     };
 }
+

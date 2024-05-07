@@ -4,7 +4,7 @@ use crate::{
         custom_user_dto::{
             BuyResourcetRequest, ChangePwdRequest, ChangeUserProfileRequest,
             CustomUserLoginRequest, CustomUserLoginResponse, CustomUserProfileResponse,
-            CustomUserRegisterRequest, CustomUserResponse, 
+            CustomUserRegisterRequest, CustomUserResponse,
         },
     },
     middleware::*,
@@ -47,7 +47,7 @@ pub async fn get_orders(depot: &mut Depot) -> AppWriter<Vec<CustomOrderResponse>
 }
 
 #[endpoint{tags ("购买资源"), }]
-pub async fn post_buy_resource(
+pub async fn put_buy_resource(
     form_data: JsonBody<BuyResourcetRequest>,
     depot: &mut Depot,
 ) -> AppWriter<CustomOrderResponse> {
@@ -101,7 +101,7 @@ pub async fn get_user_profile(depot: &mut Depot) -> AppWriter<CustomUserProfileR
 
 // 头像上传功能
 #[endpoint(tags("将头像保存到服务器"))]
-pub async fn post_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut Response) {
+pub async fn put_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut Response) {
     let token = depot.get::<&str>("jwt-token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
@@ -219,7 +219,6 @@ pub async fn put_change_password(
         }
         Err(err) => ErrorResponseBuilder::with_err(err).into_response(res),
     }
-    
 }
 
 #[endpoint(tags("创建用户"))]

@@ -30,12 +30,8 @@ use std::{
 };
 use uuid::Uuid;
 
-
 #[endpoint(tags("删除页面截图"))]
-pub async fn delete_image(
-    req: PathParam<String>,
-    depot: &mut Depot,
-) -> AppWriter<()> {
+pub async fn delete_image(req: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt-token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
@@ -48,13 +44,12 @@ pub async fn delete_image(
     AppWriter(result)
 }
 
-
 #[endpoint(tags("根据uuid获取资源详情"))]
 pub async fn get_resource_detail_by_uuid(
     req: &mut Request,
     depot: &mut Depot,
 ) -> AppWriter<SysResourceResponse> {
-    let resource_uuid = req.param("uuid").unwrap();
+    let resource_uuid = req.param("resource_uuid").unwrap();
 
     let token = depot.get::<&str>("jwt-token").copied().unwrap();
 
@@ -102,7 +97,7 @@ pub async fn get_resources_of_category(
 }
 
 #[endpoint(tags("根据语言获取资源列表"))]
-pub async fn get_resource_list_by_language(
+pub async fn get_resource_list_of_language(
     page_query: JsonBody<PaginationParams>,
 ) -> AppWriter<Vec<SysResourceList>> {
     let page_query = page_query.0;
@@ -129,7 +124,7 @@ pub async fn get_resource_list(
 }
 
 #[endpoint(tags("更改下载链接"))]
-pub async fn post_change_link(form_data: JsonBody<SysResourceChangeLink>, res: &mut Response) {
+pub async fn put_change_link(form_data: JsonBody<SysResourceChangeLink>, res: &mut Response) {
     let cloned_form_data = form_data.0;
     let resource_link = cloned_form_data.resource_link.clone();
     if let Err(_err) = sys_resource_service::change_resource_link(cloned_form_data).await {
