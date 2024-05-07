@@ -10,25 +10,23 @@ cargo run
 
 # Tip
 
-- If you choose sqlite or have initialized the data in the users table, please use the account zhangsan with password 123 to login.
-- The database connection string is in config/config.toml, but if you use sqlx or seaorm, the library itself reads the configuration from .env file to generate entities, run migrations, and validate. So when you modify the database connection string, you need to change two places at the same time.
+- I'm a rookie, this is my first website written in rusty language and there are a lot of unresolved issues in it. This project is not yet complete, my ability to progress is limited, and I'm stuck with jwt_auth in Router. The project is expected to use USDT as the currency, but I haven't figured out how to implement it yet. (Also: I'd like to make this project run on Docker, but I can't write a dockerfile)
 
-# orm doc or home page link
+# Pending
 
-🐚 You have chosen sea-orm, documentation can be viewed here:https://www.sea-ql.org/SeaORM/docs/index/
+- Docking Rainbow Easy Pay (or uses tron-sdk realization of receipts)
+- Routing Privilege Control
+-
+- Web
 
-## sea_orm_cli
+# Project dependencies
 
-For SeaOrm-cli related database migration, automatic entity creation and other commands, please check the documentation https://www.sea-ql.org/SeaORM/docs/migration/running-migration/#command-line-interface-cli
-
-## Data initialization
-
-- Please first modify the database connection string in .env and config/config.toml
-- Ensure the database exists and then run sea-orm migration to restore the database, and execute the sql file in the /data folder to add the default data to the database.
-- After running, you can access /login using the default username:zhangsan and password:123.
-- For more sea-orm-cli features, please check /migration/README.md.
-
-# Project directory description
+- [salvo](https://github.com/salvo-rs/salvo)
+- [salvo-cli](https://github.salvo-res/salvo-cli)
+- [sea-orm](https://github.com/SeaQL/sea-orm)
+- [sea-orm-cli](https://github.com/SeaQL/sea-orm-cli)
+- [mysql](https://github.com/mysql/mysql-server)
+- [redis](https://github.com/redis/redis)
 
 # source_website_salvo_sea
 
