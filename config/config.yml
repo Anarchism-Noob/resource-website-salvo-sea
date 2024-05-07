@@ -16,14 +16,18 @@ jwt:
   jwt_secret: "secret"
   jwt_exp: 6000
 
+tariff:
+  tariff_1000: 0.05
+  tariff_100: 0.10
+
 cert:
   cert: "config/certs/cert.pem"
   key: "config/certs/key.pem"
 
 log:
-  filter_level: "info"        # Available options: "debug", "info", "warn", "error"
+  filter_level: "info" # Available options: "debug", "info", "warn", "error"
   with_ansi: true
   to_stdout: true
   directory: "./logs"
   file_name: "my-service.log"
-  rolling: "daily"            # Available options: "minutely", "hourly", "daily", "never"
+  rolling: "daily" # Available options: "minutely", "hourly", "daily", "never"

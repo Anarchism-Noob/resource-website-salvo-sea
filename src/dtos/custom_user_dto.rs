@@ -12,7 +12,7 @@ use validator::Validate;
 #[serde(rename_all = "camelCase")]
 pub struct RechargeOfAdminRequest {
     pub user_uuid: String,
-    pub balance_usdt: Decimal,
+    pub balance_usdt: u64,
 }
 
 #[derive(Deserialize, Debug, Validate, ToSchema, Default)]
@@ -28,6 +28,7 @@ pub struct ChangePwdRequest {
 #[serde(rename_all = "camelCase")]
 pub struct BuyResourcetRequest {
     pub resource_uuid: String,
+    pub create_user_name: String,
 }
 
 #[derive(Deserialize, Debug, Validate, ToSchema, Default)]

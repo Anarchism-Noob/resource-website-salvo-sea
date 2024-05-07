@@ -1,5 +1,6 @@
 use crate::{
     app_writer::AppResult,
+    config::CFG,
     dtos::{
         custom_user_dto::{CustomUserProfileResponse, RechargeOfAdminRequest},
         sys_resources_dto::{SysResourceCreateRequest, SysResourceResponse},
@@ -7,11 +8,12 @@ use crate::{
             ChangeAdminProfileRequest, ChangeAdminPwdRequest, SysLoginRequest, SysLoginResponse,
             SysUserCrateRequest, SysUserProfileResponse,
         },
+        withdrawals_dto::WithdrawalsResponse,
     },
     entities::{
-        custom_orders, custom_recharge_records, custom_user,
+        custom_orders, custom_recharge, custom_user,
         prelude::{CustomOrders, CustomUser, SysImage, SysResources, SysUser},
-        sys_image, sys_resource_images, sys_resources, sys_user,
+        sys_image, sys_resource_images, sys_resources, sys_user, withdrawals,
     },
     middleware::jwt::get_token,
     utils::{db::DB, rand_utils, redis_utils::*},
@@ -30,7 +32,8 @@ pub async fn super_admin_init() {
         nick_name: Set("超级管理员".to_string()),
         user_name: Set("superadmin".to_string()),
         user_pwd: Set(rand_utils::hash_password(user_pwd).await.unwrap()),
-        email: Set(Option::from("slurredforgfun@gmail.com".to_string())),
+        balance: Set(Default::default()),
+        liaison: Set("@slurred_frogfun".to_string()),
         user_status: Set(0),
         role: Set(0),
         avatar_path: Set("../assets/avatar/default.png".to_string()),
@@ -38,6 +41,120 @@ pub async fn super_admin_init() {
     .save(db)
     .await
     .unwrap();
+}
+
+// 处理取款申请
+pub async fn put_withdrawals(withdrawals_uuid: String, uuid: String) -> AppResult<()> {
+    let db = DB.get().ok_or("数据库连接失败").unwrap();
+    // 查找未处理的取款记录
+    let withdrawals_query = withdrawals::Entity::find_by_id(&withdrawals_uuid)
+        .one(db)
+        .await?;
+    let mut withdrawals_model: withdrawals::ActiveModel = withdrawals_query.clone().unwrap().into();
+    withdrawals_model.status = Set(0);
+    withdrawals_model.succes_date = Set(Some(Utc::now().naive_utc()));
+    withdrawals_model.update(db).await?;
+    // 将扣除的手续费存入superadmin的余额
+    // 查询superadmin
+    let super_admin_query = SysUser::find()
+        .filter(sys_user::Column::Role.eq(0))
+        .one(db)
+        .await?;
+    // 更新superadmin的余额
+    let mut super_admin_model: sys_user::ActiveModel = super_admin_query.clone().unwrap().into();
+    let super_admin_balance =
+        super_admin_query.clone().unwrap().balance + withdrawals_query.unwrap().tariff;
+    super_admin_model.balance = Set(super_admin_balance);
+    super_admin_model.update(db).await?;
+    Ok(())
+}
+
+// 获取未处理的取款记录
+pub async fn get_pending_withdrawals_list(uuid: String) -> AppResult<Vec<WithdrawalsResponse>> {
+    let db = DB.get().ok_or("数据库连接失败").unwrap();
+    let query = withdrawals::Entity::find()
+        .filter(withdrawals::Column::Status.eq(1))
+        .all(db)
+        .await?;
+    let res = query
+        .into_iter()
+        .map(|item| WithdrawalsResponse {
+            uuid: item.uuid,
+            user_uuid: item.user_uuid,
+            quantities: item.quantities,
+            arrive: item.arrive,
+            create_date: item.create_date,
+            tariff: item.tariff,
+            status: item.status,
+            succes_date: item.succes_date,
+        })
+        .collect::<Vec<_>>();
+    Ok(res)
+}
+
+// 获取当前用户的取款记录
+pub async fn get_withdrawals_list(uuid: String) -> AppResult<Vec<WithdrawalsResponse>> {
+    let db = DB.get().ok_or("数据库连接失败").unwrap();
+    let query = withdrawals::Entity::find()
+        .filter(withdrawals::Column::UserUuid.eq(uuid))
+        .all(db)
+        .await?;
+    let res = query
+        .into_iter()
+        .map(|item| WithdrawalsResponse {
+            uuid: item.uuid,
+            user_uuid: item.user_uuid,
+            quantities: item.quantities,
+            arrive: item.arrive,
+            create_date: item.create_date,
+            tariff: item.tariff,
+            status: item.status,
+            succes_date: item.succes_date,
+        })
+        .collect::<Vec<_>>();
+    Ok(res)
+}
+
+// 取款申请
+pub async fn post_withdrawals(req: u64, uuid: String) -> AppResult<()> {
+    let db = DB.get().ok_or("数据库连接失败").unwrap();
+    let admin_query = SysUser::find_by_id(&uuid).one(db).await?;
+    let admin_model = admin_query.clone().unwrap();
+    if admin_model.role == 0 {
+        return Err(anyhow::anyhow!("超级管理员没有取款功能").into());
+    }
+    let tariff: f64;
+    if req > 1000 {
+        tariff = CFG.tariff.tariff_1000;
+    } else if req > 100 {
+        tariff = CFG.tariff.tariff_100;
+    } else {
+        tariff = 0.0;
+    }
+
+    let mut change_model: sys_user::ActiveModel = admin_model.clone().into();
+    // 扣除取款金额
+    let balance = admin_model.balance - req;
+    // 计算手续费，向上取整
+    let tariff_to = ((req as f64) * tariff).ceil() as u64;
+    // 计算到账金额
+    let aarrive = req - tariff_to;
+    change_model.balance = Set(balance);
+    change_model.update(db).await?;
+    withdrawals::ActiveModel {
+        uuid: Set(Uuid::new_v4().to_string()),
+        user_uuid: Set(uuid),
+        quantities: Set(req),
+        arrive: Set(aarrive),
+        create_date: Set(Local::now().naive_utc()),
+        tariff: Set(tariff_to.clone()),
+        status: Set(1),
+        ..Default::default()
+    }
+    .save(db)
+    .await?;
+
+    Ok(())
 }
 
 pub async fn recharge_for_custom(
@@ -57,10 +174,10 @@ pub async fn recharge_for_custom(
         admin_query.unwrap().user_uuid,
         Uuid::new_v4().to_string()
     );
-    custom_recharge_records::ActiveModel {
+    custom_recharge::ActiveModel {
         record_uuid: Set(Uuid::new_v4().to_string()),
         user_uuid: Set(from_data.user_uuid),
-        recharge_amount: Set(from_data.balance_usdt),
+        recharge_amount: Set(from_data.balance_usdt.into()),
         payment_channel: Set("线下充值".to_string()),
         recharge_date: Set(Local::now().naive_utc()),
         recharge_status: Set(2),
@@ -108,7 +225,7 @@ pub async fn change_profile(
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let res = sys_user::ActiveModel {
         nick_name: Set(form_data.nick_name),
-        email: Set(form_data.email),
+        liaison: Set(form_data.liaison),
         ..Default::default()
     }
     .update(db)
@@ -118,7 +235,8 @@ pub async fn change_profile(
         nick_name: res.nick_name,
         user_name: res.user_name,
         role: res.role,
-        email: res.email,
+        liaison: res.liaison,
+        balance: res.balance,
         avatar_path: res.avatar_path,
     })
 }
@@ -134,7 +252,8 @@ pub async fn get_user_profile(uuid: String) -> AppResult<SysUserProfileResponse>
         user_uuid: user_model.user_uuid,
         nick_name: user_model.nick_name,
         user_name: user_model.user_name,
-        email: user_model.email,
+        liaison: user_model.liaison,
+        balance: user_model.balance,
         role: user_model.role,
         avatar_path: user_model.avatar_path,
     })
@@ -151,7 +270,8 @@ pub async fn save_avatar(avatar_path: String, uuid: String) -> AppResult<SysUser
         nick_name: user_res.nick_name,
         user_name: user_res.user_name,
         role: user_res.role,
-        email: user_res.email,
+        liaison: user_res.liaison,
+        balance: user_res.balance,
         avatar_path: user_res.avatar_path,
     })
 }
@@ -199,7 +319,8 @@ pub async fn create_admin_user(from_data: SysUserCrateRequest, uuid: String) -> 
         nick_name: Set(from_data.nick_name),
         user_name: Set(from_data.user_name.clone()),
         role: Set(from_data.role),
-        email: Set(from_data.email),
+        liaison: Set(from_data.liaison),
+        balance: Set(Default::default()),
         user_status: Set(0),
         user_pwd: Set(rand_utils::hash_password(from_data.user_pwd).await.unwrap()),
         avatar_path: Set("../assets/avatar/default.png".to_string()),
@@ -233,8 +354,8 @@ pub async fn login(form_data: SysLoginRequest) -> AppResult<SysLoginResponse> {
     let (token, exp) = get_token(
         user_model.user_name.clone(),
         user_model.user_uuid.clone(),
-        Some(user_model.user_status),
-        Some(user_model.role.clone()),
+        Some(user_model.user_status.try_into().unwrap()),
+        Some(user_model.role.clone().try_into().unwrap()),
     )?;
 
     Ok(SysLoginResponse {
@@ -257,7 +378,8 @@ pub async fn get_admin_profile(user_uuid: String) -> AppResult<SysUserProfileRes
         nick_name: user_model.nick_name,
         user_name: user_model.user_name,
         role: user_model.role,
-        email: user_model.email,
+        liaison: user_model.liaison,
+        balance: user_model.balance,
         avatar_path: user_model.avatar_path,
     })
 }
@@ -295,7 +417,7 @@ pub async fn list_custom_user(uuid: String) -> AppResult<Vec<CustomUserProfileRe
             user_uuid: x.user_uuid,
             nick_name: x.nick_name,
             user_name: x.user_name,
-            balance_usdt: x.balance_usdt,
+            balance_usdt: x.balance_usdt.into(),
             email: x.email,
             avatar_path: x.avatar_path,
         })
@@ -345,7 +467,8 @@ pub async fn list_admin_user(uuid: String) -> AppResult<Vec<SysUserProfileRespon
             nick_name: x.nick_name,
             user_name: x.user_name,
             role: x.role,
-            email: x.email,
+            liaison: x.liaison,
+            balance: x.balance,
             avatar_path: x.avatar_path,
         })
         .collect::<Vec<_>>();

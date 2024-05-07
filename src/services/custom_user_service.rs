@@ -10,8 +10,8 @@ use crate::{
     },
     entities::{
         custom_orders, custom_user,
-        prelude::{CustomOrders, CustomUser, SysResources},
-        sys_resources,
+        prelude::{CustomOrders, CustomUser, SysResources, SysUser},
+        sys_resources, sys_user,
     },
     middleware::jwt::get_token,
     utils::{db::DB, rand_utils, redis_utils::*},
@@ -34,7 +34,7 @@ pub async fn save_avatar(
         nick_name: model_res.nick_name,
         user_name: model_res.user_name,
         email: model_res.email,
-        balance_usdt: model_res.balance_usdt,
+        balance_usdt: model_res.balance_usdt.into(),
         avatar_path: model_res.avatar_path,
     })
 }
@@ -102,7 +102,7 @@ pub async fn change_profile(
         nick_name: user.nick_name,
         user_name: user.user_name,
         email: user.email,
-        balance_usdt: user.balance_usdt,
+        balance_usdt: user.balance_usdt.into(),
         avatar_path: user.avatar_path,
     })
 }
@@ -116,7 +116,7 @@ pub async fn get_user_profile(user_uuid: String) -> AppResult<CustomUserProfileR
         nick_name: user_res.nick_name,
         user_name: user_res.user_name,
         email: user_res.email,
-        balance_usdt: user_res.balance_usdt,
+        balance_usdt: user_res.balance_usdt.into(),
         avatar_path: user_res.avatar_path,
     })
 }
@@ -126,6 +126,7 @@ pub async fn buy_resource_request(
     uuid: String,
 ) -> AppResult<CustomOrderResponse> {
     let db = DB.get().ok_or(anyhow::anyhow!("数据库连接失败"))?;
+    // 查看该用户是否购买过对应资源
     let order_result = CustomOrders::find()
         .join_rev(
             JoinType::LeftJoin,
@@ -142,21 +143,32 @@ pub async fn buy_resource_request(
     if order_result.len() > 0 {
         return Err(anyhow::anyhow!("资源已购买").into());
     }
+    // 查询资源信息
     let resource_result = SysResources::find()
         .filter(sys_resources::Column::ResourceUuid.eq(req.resource_uuid.clone()))
         .one(db)
         .await?;
+    // 查询用户信息
     let user_result = CustomUser::find()
         .filter(custom_user::Column::UserUuid.eq(uuid.clone()))
         .one(db)
         .await?;
-    let user_model = user_result.unwrap();
+    let user_model = user_result.clone().unwrap();
     let resource_model = resource_result.unwrap();
 
+    // 判断余额是否足够
     if user_model.balance_usdt < resource_model.resource_price {
         return Err(anyhow::anyhow!("余额不足").into());
     }
-    custom_orders::ActiveModel {
+
+    // 扣除用户余额
+    let custom_balance = user_model.balance_usdt - resource_model.resource_price;
+    let mut update_custom_balance: custom_user::ActiveModel = user_result.unwrap().into();
+    update_custom_balance.balance_usdt = Set(custom_balance);
+    update_custom_balance.update(db).await?;
+
+    // 添加订单记录
+    let new_order = custom_orders::ActiveModel {
         order_uuid: Set(Uuid::new_v4().to_string()),
         user_uuid: Set(user_model.user_uuid),
         resource_uuid: Set(resource_model.resource_uuid),
@@ -169,9 +181,18 @@ pub async fn buy_resource_request(
     }
     .save(db)
     .await?;
-    let order_query = CustomOrders::find()
-        .filter(custom_orders::Column::UserUuid.eq(uuid))
-        .filter(custom_orders::Column::ResourceUuid.eq(req.resource_uuid))
+
+    // 添加管理员余额记录
+    let admin_user = SysUser::find()
+        .filter(sys_user::Column::UserName.eq(req.create_user_name))
+        .one(db)
+        .await?;
+    let admin_balance = admin_user.clone().unwrap().balance + resource_model.resource_price.clone();
+    let mut admin_user_model: sys_user::ActiveModel = admin_user.unwrap().into();
+    admin_user_model.balance = Set(admin_balance);
+    admin_user_model.update(db).await?;
+
+    let order_query = CustomOrders::find_by_id(new_order.order_uuid.unwrap().clone())
         .one(db)
         .await?;
     let order_res = order_query.unwrap();

@@ -12,20 +12,20 @@ pub struct Model {
     pub user_name: String,
     pub user_pwd: String,
     pub email: Option<String>,
-    pub user_status: i32,
+    pub user_status: u32,
     #[sea_orm(column_type = "Decimal(Some((10, 2)))")]
-    pub balance_usdt: Decimal,
+    pub balance_usdt: u64,
     pub registration_date: DateTime,
     pub avatar_path: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::custom_recharge_records::Entity")]
+    #[sea_orm(has_many = "super::custom_recharge::Entity")]
     CustomRechargeRecords,
 }
 
-impl Related<super::custom_recharge_records::Entity> for Entity {
+impl Related<super::custom_recharge::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::CustomRechargeRecords.def()
     }

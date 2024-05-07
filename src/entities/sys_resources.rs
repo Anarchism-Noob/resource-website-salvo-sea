@@ -12,7 +12,7 @@ pub struct Model {
     pub description: Option<String>,
     pub description_file_path: Option<String>,
     #[sea_orm(column_type = "Decimal(Some((65, 2)))")]
-    pub resource_price: Decimal,
+    pub resource_price: u64,
     pub category: String,
     pub language: String,
     pub resource_link: String,

@@ -12,9 +12,10 @@ pub struct Model {
     #[sea_orm(unique)]
     pub user_name: String,
     pub user_pwd: String,
-    pub email: Option<String>,
-    pub user_status: i32,
-    pub role: i32,
+    pub balance: u64,
+    pub liaison: String,
+    pub user_status: u32,
+    pub role: u32,
     pub avatar_path: String,
 }
 

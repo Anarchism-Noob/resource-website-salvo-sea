@@ -1,3 +1,4 @@
+use crate::config::CFG;
 use anyhow::Result;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, EncodingKey, Validation};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -5,17 +6,15 @@ use salvo::jwt_auth::{ConstDecoder, CookieFinder, HeaderFinder, QueryFinder};
 use salvo::prelude::*;
 use serde::{Deserialize, Serialize};
 use time::{Duration, OffsetDateTime};
-use crate::config::CFG;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct JwtClaims {
     pub username: String,
     pub user_id: String,
     pub exp: i64,
-    pub role: Option<i32>,
-    pub user_status: Option<i32>,
+    pub role: Option<u32>,
+    pub user_status: Option<u32>,
 }
-
 
 #[allow(dead_code)]
 pub fn jwt_middleware() -> JwtAuth<JwtClaims, ConstDecoder> {
@@ -35,8 +34,8 @@ pub fn jwt_middleware() -> JwtAuth<JwtClaims, ConstDecoder> {
 pub fn get_token(
     username: String,
     user_id: String,
-    user_status: Option<i32>,
-    role: Option<i32>,
+    user_status: Option<u32>,
+    role: Option<u32>,
 ) -> Result<(String, i64)> {
     let exp = OffsetDateTime::now_utc() + Duration::seconds(CFG.jwt.jwt_exp);
     let claim = JwtClaims {

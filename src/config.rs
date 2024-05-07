@@ -8,6 +8,7 @@ pub struct Configs {
     pub log: Log,
     pub database: DataBase,
     pub cache: CaChe,
+    pub tariff: Tariff,
     pub cert: Cert,
     pub jwt: Jwt,
 }
@@ -25,7 +26,13 @@ pub struct DataBase {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct CaChe{
+pub struct Tariff {
+    pub tariff_1000: f64,
+    pub tariff_100: f64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CaChe {
     pub redis_url: String,
 }
 
@@ -71,7 +78,7 @@ impl Configs {
             Ok(s) => s,
             Err(e) => panic!("Failed to read configuration file, error message:{}", e),
         };
-        match serde_yaml::from_str(&cfg_contents){
+        match serde_yaml::from_str(&cfg_contents) {
             Ok(c) => c,
             Err(e) => panic!("Failed to parse configuration file, error message:{}", e),
         }

@@ -10,9 +10,9 @@ pub struct Model {
     pub record_uuid: String,
     pub user_uuid: String,
     #[sea_orm(column_type = "Decimal(Some((10, 2)))")]
-    pub recharge_amount: Decimal,
+    pub recharge_amount: u64,
     pub payment_channel: String,
-    pub recharge_status: i32,
+    pub recharge_status: u32,
     pub recharge_date: DateTime,
     pub transaction_id: String,
     #[sea_orm(column_type = "Text", nullable)]

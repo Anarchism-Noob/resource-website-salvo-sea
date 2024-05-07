@@ -9,7 +9,7 @@ use validator::Validate;
 #[serde(rename_all = "camelCase")]
 pub struct ChangeAdminProfileRequest {
     pub nick_name: String,
-    pub email: Option<String>,
+    pub liaison: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Validate, ToSchema, Default)]
@@ -28,8 +28,8 @@ pub struct SysUserCrateRequest {
     pub nick_name: String,
     pub user_name: String,
     pub user_pwd: String,
-    pub email: Option<String>,
-    pub role: i32,
+    pub liaison: String,
+    pub role: u32,
     pub avatar_path: String,
 }
 
@@ -40,8 +40,9 @@ pub struct SysUserProfileResponse {
     pub user_uuid: String,
     pub nick_name: String,
     pub user_name: String,
-    pub email: Option<String>,
-    pub role: i32,
+    pub liaison: String,
+    pub balance: u64,
+    pub role: u32,
     pub avatar_path: String,
 }
 

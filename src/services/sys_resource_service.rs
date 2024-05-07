@@ -150,7 +150,7 @@ pub async fn get_resources_by_category_and_language(
         let res = SysResourceList {
             resource_uuid: item.resource_uuid.clone(),
             resource_name: item.resource_name.clone(),
-            resource_price: item.resource_price.clone(),
+            resource_price: item.resource_price.clone().into(),
             category: item.category.clone(),
             language: item.language.clone(),
             resource_image: resource_image_path,
@@ -192,7 +192,7 @@ pub async fn get_resours_of_language(
         let res = SysResourceList {
             resource_uuid: item.resource_uuid.clone(),
             resource_name: item.resource_name.clone(),
-            resource_price: item.resource_price.clone(),
+            resource_price: item.resource_price.clone().into(),
             category: item.category.clone(),
             language: item.language.clone(),
             resource_image: resource_image_path,
@@ -234,7 +234,7 @@ pub async fn get_resources_of_category(
         let res = SysResourceList {
             resource_uuid: item.resource_uuid.clone(),
             resource_name: item.resource_name.clone(),
-            resource_price: item.resource_price.clone(),
+            resource_price: item.resource_price.clone().into(),
             category: item.category.clone(),
             language: item.language.clone(),
             resource_image: resource_image_path,
@@ -270,7 +270,7 @@ pub async fn get_resource_list(page_no: u64, page_size: u64) -> AppResult<Vec<Sy
         let res = SysResourceList {
             resource_uuid: item.resource_uuid.clone(),
             resource_name: item.resource_name.clone(),
-            resource_price: item.resource_price.clone(),
+            resource_price: item.resource_price.clone().into(),
             category: item.category.clone(),
             language: item.language.clone(),
             resource_image: resource_image_path,

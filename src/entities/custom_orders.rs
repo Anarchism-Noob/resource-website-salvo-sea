@@ -15,7 +15,7 @@ pub struct Model {
     pub resource_language: String,
     pub download_link: String,
     #[sea_orm(column_type = "Decimal(Some((10, 2)))")]
-    pub order_resource_price: Decimal,
+    pub order_resource_price: u64,
     pub creation_date: DateTime,
 }
 

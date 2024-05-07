@@ -3,9 +3,8 @@ use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-
-#[derive( Serialize, Deserialize, Debug, Validate, ToSchema, Default)]
-#[salvo(schema(rename_all= "camelCase"))]
+#[derive(Serialize, Deserialize, Debug, Validate, ToSchema, Default)]
+#[salvo(schema(rename_all = "camelCase"))]
 #[serde(rename_all = "camelCase")]
 pub struct CustomOrderCrateRequest {
     pub order_uuid: String,
@@ -15,12 +14,12 @@ pub struct CustomOrderCrateRequest {
     pub resource_category: String,
     pub resource_language: String,
     pub download_link: String,
-    pub order_resource_price: Decimal,
+    pub order_resource_price: u64,
     pub creation_date: DateTime,
 }
 
-#[derive( Serialize, Deserialize, Debug, Validate, ToSchema, Default, Clone)]
-#[salvo(schema(rename_all= "camelCase"))]
+#[derive(Serialize, Deserialize, Debug, Validate, ToSchema, Default, Clone)]
+#[salvo(schema(rename_all = "camelCase"))]
 #[serde(rename_all = "camelCase")]
 pub struct CustomOrderResponse {
     pub order_uuid: String,
@@ -29,6 +28,6 @@ pub struct CustomOrderResponse {
     pub resource_category: String,
     pub resource_language: String,
     pub download_link: String,
-    pub order_resource_price: Decimal,
+    pub order_resource_price: u64,
     pub creation_date: DateTime,
 }
