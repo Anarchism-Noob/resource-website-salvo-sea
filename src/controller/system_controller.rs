@@ -7,6 +7,7 @@ use crate::{
             ChangeAdminProfileRequest, ChangeAdminPwdRequest, SysLoginRequest, SysLoginResponse,
             SysUserCrateRequest, SysUserProfileResponse,
         },
+        withdrawals_dto::WithdrawalsResponse,
     },
     middleware::jwt::{self, JwtClaims},
     services::admin_user_service,
@@ -30,6 +31,62 @@ use std::{
     path::{Path, PathBuf},
 };
 use uuid::Uuid;
+
+#[endpoint(tags("处理取款申请"))]
+pub async fn post_withdraw_process(
+    req: JsonBody<String>,
+    depot: &mut Depot,
+) -> AppWriter<()> {
+    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+
+    if let Err(err) = jwt::parse_token(&token) {
+        return AppError::AnyHow(err).into();
+    }
+    let jwt_model = jwt::parse_token(&token).unwrap();
+    let uuid = jwt_model.user_id;
+    let _result = admin_user_service::post_withdraw_process(req.0, uuid).await;
+    AppWriter(_result)
+}
+
+#[endpoint(tags("获取未处理的取款记录"))]
+pub async fn get_withdraw_list_unprocessed(
+    depot: &mut Depot,
+) -> AppWriter<Vec<WithdrawalsResponse>> {
+    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    if let Err(err) = jwt::parse_token(&token) {
+        return AppError::AnyHow(err).into();
+    }
+    let jwt_model = jwt::parse_token(&token).unwrap();
+    let uuid = jwt_model.user_id;
+    let _result = admin_user_service::get_withdrawals_list_unprocessed(uuid).await;
+    AppWriter(_result)
+}
+
+#[endpoint(tags("获取当前用户的取款记录"))]
+pub async fn get_withdraw_list(depot: &mut Depot) -> AppWriter<Vec<WithdrawalsResponse>> {
+    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+
+    if let Err(err) = jwt::parse_token(&token) {
+        return AppError::AnyHow(err).into();
+    }
+    let jwt_model = jwt::parse_token(&token).unwrap();
+    let uuid = jwt_model.user_id;
+    let _result = admin_user_service::get_withdrawals_list(uuid).await;
+    AppWriter(_result)
+}
+
+#[endpoint(tags("取款申请"))]
+pub async fn post_withdraw(req: JsonBody<u64>, depot: &mut Depot) -> AppWriter<()> {
+    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+
+    if let Err(err) = jwt::parse_token(&token) {
+        return AppError::AnyHow(err).into();
+    }
+    let jwt_model = jwt::parse_token(&token).unwrap();
+    let uuid = jwt_model.user_id;
+    let _result = admin_user_service::post_withdrawals(req.0, uuid).await;
+    AppWriter(_result)
+}
 
 #[endpoint(tags("手动充值"))]
 pub async fn post_recharge(

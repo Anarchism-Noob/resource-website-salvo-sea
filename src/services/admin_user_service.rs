@@ -44,7 +44,7 @@ pub async fn super_admin_init() {
 }
 
 // 处理取款申请
-pub async fn put_withdrawals(withdrawals_uuid: String, uuid: String) -> AppResult<()> {
+pub async fn post_withdraw_process(withdrawals_uuid: String, uuid: String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     // 查找未处理的取款记录
     let withdrawals_query = withdrawals::Entity::find_by_id(&withdrawals_uuid)
@@ -56,10 +56,11 @@ pub async fn put_withdrawals(withdrawals_uuid: String, uuid: String) -> AppResul
     withdrawals_model.update(db).await?;
     // 将扣除的手续费存入superadmin的余额
     // 查询superadmin
-    let super_admin_query = SysUser::find()
-        .filter(sys_user::Column::Role.eq(0))
-        .one(db)
-        .await?;
+    let super_admin_query = SysUser::find_by_id(&uuid).one(db).await?;
+    // 判断是否是超级管理员
+    if super_admin_query.clone().unwrap().role != 0 {
+        return Err(anyhow::anyhow!("没有权限").into());
+    }
     // 更新superadmin的余额
     let mut super_admin_model: sys_user::ActiveModel = super_admin_query.clone().unwrap().into();
     let super_admin_balance =
@@ -70,7 +71,7 @@ pub async fn put_withdrawals(withdrawals_uuid: String, uuid: String) -> AppResul
 }
 
 // 获取未处理的取款记录
-pub async fn get_pending_withdrawals_list(uuid: String) -> AppResult<Vec<WithdrawalsResponse>> {
+pub async fn get_withdrawals_list_unprocessed(uuid: String) -> AppResult<Vec<WithdrawalsResponse>> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let query = withdrawals::Entity::find()
         .filter(withdrawals::Column::Status.eq(1))
