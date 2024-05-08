@@ -33,11 +33,8 @@ use std::{
 use uuid::Uuid;
 
 #[endpoint(tags("处理取款申请"))]
-pub async fn post_withdraw_process(
-    req: JsonBody<String>,
-    depot: &mut Depot,
-) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+pub async fn put_withdraw_process(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<()> {
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -52,7 +49,7 @@ pub async fn post_withdraw_process(
 pub async fn get_withdraw_list_unprocessed(
     depot: &mut Depot,
 ) -> AppWriter<Vec<WithdrawalsResponse>> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
     }
@@ -64,7 +61,7 @@ pub async fn get_withdraw_list_unprocessed(
 
 #[endpoint(tags("获取当前用户的取款记录"))]
 pub async fn get_withdraw_list(depot: &mut Depot) -> AppWriter<Vec<WithdrawalsResponse>> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -76,8 +73,8 @@ pub async fn get_withdraw_list(depot: &mut Depot) -> AppWriter<Vec<WithdrawalsRe
 }
 
 #[endpoint(tags("取款申请"))]
-pub async fn post_withdraw(req: JsonBody<u64>, depot: &mut Depot) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+pub async fn put_withdraw(req: JsonBody<u64>, depot: &mut Depot) -> AppWriter<()> {
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -89,11 +86,11 @@ pub async fn post_withdraw(req: JsonBody<u64>, depot: &mut Depot) -> AppWriter<(
 }
 
 #[endpoint(tags("手动充值"))]
-pub async fn post_recharge(
+pub async fn put_recharge(
     form_data: JsonBody<RechargeOfAdminRequest>,
     depot: &mut Depot,
 ) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -107,7 +104,7 @@ pub async fn post_recharge(
 
 #[endpoint(tags("禁用admin账号"))]
 pub async fn disable_admin(admin_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -120,7 +117,7 @@ pub async fn disable_admin(admin_uuid: PathParam<String>, depot: &mut Depot) -> 
 
 #[endpoint(tags("禁用custom账号"))]
 pub async fn disable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -134,7 +131,7 @@ pub async fn disable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) -
 
 #[endpoint(tags("获取管理员列表"))]
 pub async fn get_admin_list(depot: &mut Depot) -> AppWriter<Vec<SysUserProfileResponse>> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -148,7 +145,7 @@ pub async fn get_admin_list(depot: &mut Depot) -> AppWriter<Vec<SysUserProfileRe
 
 #[endpoint(tags("获取用户列表"))]
 pub async fn get_custom_list(depot: &mut Depot) -> AppWriter<Vec<CustomUserProfileResponse>> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -165,7 +162,7 @@ pub async fn put_change_profile(
     form_data: JsonBody<ChangeAdminProfileRequest>,
     depot: &mut Depot,
 ) -> AppWriter<SysUserProfileResponse> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -182,7 +179,7 @@ pub async fn put_change_profile(
 // 获取用户详细信息
 #[endpoint(tags("获取当前用户详情"))]
 pub async fn get_user_profile(depot: &mut Depot) -> AppWriter<SysUserProfileResponse> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -196,8 +193,8 @@ pub async fn get_user_profile(depot: &mut Depot) -> AppWriter<SysUserProfileResp
 
 // 头像上传功能
 #[endpoint(tags("将头像保存到服务器"))]
-pub async fn post_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut Response) {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+pub async fn put_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut Response) {
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
@@ -251,7 +248,7 @@ pub async fn put_change_password(
     depot: &mut Depot,
     res: &mut Response,
 ) {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
@@ -319,7 +316,7 @@ pub async fn post_register_admin(
     res: &mut Response,
 ) {
     let _model = form_data.0;
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err.into())).into_response(res);

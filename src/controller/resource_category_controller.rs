@@ -27,10 +27,10 @@ pub async fn get_category_list() -> AppWriter<Vec<QueryCategoryResponse>> {
 #[endpoint(tags("创建资源分类"))]
 pub async fn create_category(req: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
     // 获取token
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用
     if let Err(err) = jwt::parse_token(&token) {
-       return AppError::AnyHow(err).into();
+        return AppError::AnyHow(err).into();
     }
     // 解析token
     let jwt_model = jwt::parse_token(&token).unwrap();
@@ -45,7 +45,7 @@ pub async fn create_category(req: PathParam<String>, depot: &mut Depot) -> AppWr
 #[endpoint(tags("删除资源分类"))]
 pub async fn delete_category(req: PathParam<i32>, depot: &mut Depot) -> AppWriter<()> {
     // 获取token
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();

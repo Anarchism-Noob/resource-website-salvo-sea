@@ -1,12 +1,10 @@
 use crate::{
     dtos::sys_carousel_dto::{CreateCarouselRequest, QueryCarouselResponse},
-    services::sys_carousel_service,
     middleware::*,
+    services::sys_carousel_service,
     utils::{
         app_error::AppError,
-        app_writer::{
-            AppResult, AppWriter, ErrorResponseBuilder
-        },
+        app_writer::{AppResult, AppWriter, ErrorResponseBuilder},
     },
 };
 use salvo::{
@@ -25,8 +23,8 @@ use std::{
 use uuid::Uuid;
 
 #[endpoint(tags("删除轮播图"))]
-pub async fn delete_carousel(img: PathParam<String>, depot: &mut Depot)->AppWriter<()>{
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+pub async fn delete_carousel(img: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -37,16 +35,18 @@ pub async fn delete_carousel(img: PathParam<String>, depot: &mut Depot)->AppWrit
     AppWriter(_result)
 }
 
-
 #[endpoint(tags("获取首页轮播图"))]
-pub async fn get_carousel()-> AppWriter<Vec<QueryCarouselResponse>>{
+pub async fn get_carousel() -> AppWriter<Vec<QueryCarouselResponse>> {
     let carousel = sys_carousel_service::get_carousel().await;
     AppWriter(carousel)
 }
 
 #[endpoint(tags("创建轮播图"))]
-pub async fn put_create_carousel(form_data: JsonBody<CreateCarouselRequest>, depot: &mut Depot)->AppWriter<()>{
-     let token = depot.get::<&str>("jwt-token").copied().unwrap();
+pub async fn put_create_carousel(
+    form_data: JsonBody<CreateCarouselRequest>,
+    depot: &mut Depot,
+) -> AppWriter<()> {
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -60,7 +60,7 @@ pub async fn put_create_carousel(form_data: JsonBody<CreateCarouselRequest>, dep
 }
 
 #[endpoint(tags("上传轮播图"))]
-pub async fn post_upload_carousel(req: &mut Request, res: &mut Response){
+pub async fn post_upload_carousel(req: &mut Request, res: &mut Response) {
     // 创建一个uploads目录，用于保存上传的文件
     let file = req.file("avatar").await;
     if let Some(file) = file {
@@ -89,15 +89,15 @@ pub async fn post_upload_carousel(req: &mut Request, res: &mut Response){
                 format!("{:?}", dest)
             };
 
-            let _result =
-                sys_carousel_service::save_carsousel(dest.to_str().unwrap_or("").to_string(), file_name)
-                    .await;
+            let _result = sys_carousel_service::save_carsousel(
+                dest.to_str().unwrap_or("").to_string(),
+                file_name,
+            )
+            .await;
             res.render(Json(info));
         }
     } else {
         res.status_code(StatusCode::BAD_REQUEST);
         res.render(Json("file not found in request"));
     }
-
-    
 }

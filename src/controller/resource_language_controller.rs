@@ -27,7 +27,7 @@ pub async fn get_dev_languages() -> AppWriter<Vec<QueryLanguageResponse>> {
 #[endpoint(tags("新增开发语言项"))]
 pub async fn post_create_language(req: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
     // 获取token
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -43,9 +43,9 @@ pub async fn post_create_language(req: PathParam<String>, depot: &mut Depot) -> 
 }
 
 #[endpoint(tags("删除开发语言项"))]
-pub async fn delete_delete_language(req: PathParam<i32>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn delete_language(req: PathParam<i32>, depot: &mut Depot) -> AppWriter<()> {
     // 获取token
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();

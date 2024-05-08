@@ -33,7 +33,7 @@ use uuid::Uuid;
 
 #[endpoint(tags("获取历史订单",))]
 pub async fn get_orders(depot: &mut Depot) -> AppWriter<Vec<CustomOrderResponse>> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -51,7 +51,7 @@ pub async fn put_buy_resource(
     form_data: JsonBody<BuyResourcetRequest>,
     depot: &mut Depot,
 ) -> AppWriter<CustomOrderResponse> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -70,7 +70,7 @@ pub async fn put_change_profile(
     form_data: JsonBody<ChangeUserProfileRequest>,
     depot: &mut Depot,
 ) -> AppWriter<CustomUserProfileResponse> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -87,7 +87,7 @@ pub async fn put_change_profile(
 // 获取用户详细信息
 #[endpoint(tags("获取用户详情"))]
 pub async fn get_user_profile(depot: &mut Depot) -> AppWriter<CustomUserProfileResponse> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();
@@ -102,7 +102,7 @@ pub async fn get_user_profile(depot: &mut Depot) -> AppWriter<CustomUserProfileR
 // 头像上传功能
 #[endpoint(tags("将头像保存到服务器"))]
 pub async fn put_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut Response) {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
@@ -203,7 +203,7 @@ pub async fn put_change_password(
     depot: &mut Depot,
     res: &mut Response,
 ) {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);

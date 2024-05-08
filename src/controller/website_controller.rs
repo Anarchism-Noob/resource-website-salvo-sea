@@ -33,7 +33,7 @@ pub async fn get_admin_bg() -> AppWriter<String> {
 
 #[endpoint(tags("上传管理员登陆背景"))]
 pub async fn upload_admin_bg(mut req: &mut Request, depot: &mut Depot, res: &mut Response) {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
@@ -90,12 +90,8 @@ pub async fn get_custom_bg() -> AppWriter<String> {
 }
 
 #[endpoint(tags("上传客户登录页面背景图"))]
-pub async fn upload_website_login_background(
-    mut req: &mut Request,
-    depot: &mut Depot,
-    res: &mut Response,
-) {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+pub async fn upload_custom_bg(mut req: &mut Request, depot: &mut Depot, res: &mut Response) {
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
@@ -154,7 +150,7 @@ pub async fn get_website_logo() -> AppWriter<String> {
 
 #[endpoint(tags("上传网站logo"))]
 pub async fn upload_website_logo(mut req: &mut Request, depot: &mut Depot, res: &mut Response) {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
@@ -202,9 +198,9 @@ pub async fn upload_website_logo(mut req: &mut Request, depot: &mut Depot, res: 
 }
 
 #[endpoint(tags("获取网站信息"))]
-pub async fn get_website_prodile() -> AppWriter<WebSiteProfileResponse> {
+pub async fn get_website_profile() -> AppWriter<WebSiteProfileResponse> {
     // // 获取token
-    // let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    // let token = depot.get::<&str>("jwt_token").copied().unwrap();
     // //判断token是否可用
     // if let Err(err) = jwt::parse_token(&token) {
     //     return AppError::AnyHow(err).into();
@@ -228,7 +224,7 @@ pub async fn update_website_profile(
     depot: &mut Depot,
 ) -> AppWriter<WebSiteProfileResponse> {
     // 获取token
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用
     if let Err(err) = jwt::parse_token(&token) {
         return AppError::AnyHow(err).into();

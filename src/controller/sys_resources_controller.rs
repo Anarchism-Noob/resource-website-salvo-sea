@@ -32,7 +32,7 @@ use uuid::Uuid;
 
 #[endpoint(tags("删除页面截图"))]
 pub async fn delete_image(req: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppWriter(Err(err.into()));
@@ -51,7 +51,7 @@ pub async fn get_resource_detail_by_uuid(
 ) -> AppWriter<SysResourceResponse> {
     let resource_uuid = req.param("resource_uuid").unwrap();
 
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return AppWriter(Err(err.into()));
@@ -141,7 +141,7 @@ pub async fn post_create_resource(
 ) {
     let form_data = form_data.0;
 
-    let token = depot.get::<&str>("jwt-token").copied().unwrap();
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
@@ -158,7 +158,7 @@ pub async fn post_create_resource(
 
 //上传资源截图
 #[endpoint(tags("上传图片"))]
-pub async fn post_upload_avatar(req: &mut Request, res: &mut Response) {
+pub async fn put_upload_image(req: &mut Request, res: &mut Response) {
     let files = req.files("avatar").await;
     if let Some(files) = files {
         let mut msgs: Vec<(String, String)> = Vec::with_capacity(files.len());

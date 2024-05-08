@@ -1,9 +1,18 @@
-use crate::config::CFG;
+use crate::{
+    config::CFG,
+    entities::{
+        custom_user,
+        prelude::{CustomUser, SysUser},
+        sys_user,
+    },
+    utils::db::DB,
+};
 use anyhow::Result;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, EncodingKey, Validation};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use salvo::jwt_auth::{ConstDecoder, CookieFinder, HeaderFinder, QueryFinder};
 use salvo::prelude::*;
+use sea_orm::EntityTrait;
 use serde::{Deserialize, Serialize};
 use time::{Duration, OffsetDateTime};
 
@@ -76,4 +85,3 @@ pub fn parse_token(token: &str) -> Result<JwtClaims, anyhow::Error> {
         Err(e) => Err(anyhow::anyhow!("{:?}", e)),
     };
 }
-
