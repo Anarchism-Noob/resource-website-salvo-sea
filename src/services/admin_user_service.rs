@@ -249,6 +249,19 @@ pub async fn disable_admin_user(admin_uuid: String, uuid: String) -> AppResult<(
     Ok(())
 }
 
+// 解禁管理员账号
+pub async fn enable_admin_user(admin_uuid: String, uuid: String) -> AppResult<()> {
+    let db = DB.get().ok_or("数据库连接失败").unwrap();
+    let depot_query = SysUser::find_by_id(uuid).one(db).await?;
+    if depot_query.clone().unwrap().role != 0 {
+        return Err(anyhow::anyhow!("无权限").into());
+    }
+    let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
+    let mut admin_model: sys_user::ActiveModel = admin_query.unwrap().clone().into();
+    admin_model.user_status = Set(0);
+    admin_model.update(db).await?;
+    Ok(())
+}
 // 禁用自定义用户
 pub async fn disable_custom_user(custom_uuid: String, admin_uuid: String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
@@ -259,6 +272,20 @@ pub async fn disable_custom_user(custom_uuid: String, admin_uuid: String) -> App
     let custom_query = CustomUser::find_by_id(custom_uuid).one(db).await?;
     let mut custom_model: custom_user::ActiveModel = custom_query.unwrap().clone().into();
     custom_model.user_status = Set(1);
+    custom_model.update(db).await?;
+    Ok(())
+}
+
+// 解禁自定义用户
+pub async fn enable_custom_user(custom_uuid: String, admin_uuid: String) -> AppResult<()> {
+    let db = DB.get().ok_or("数据库连接失败").unwrap();
+    let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
+    if admin_query.unwrap().role.clone() > 1 {
+        return Err(anyhow::anyhow!("无权限").into());
+    }
+    let custom_query = CustomUser::find_by_id(custom_uuid).one(db).await?;
+    let mut custom_model: custom_user::ActiveModel = custom_query.unwrap().clone().into();
+    custom_model.user_status = Set(0);
     custom_model.update(db).await?;
     Ok(())
 }

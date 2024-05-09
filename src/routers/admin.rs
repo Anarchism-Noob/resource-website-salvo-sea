@@ -10,10 +10,11 @@ use crate::{
             put_upload_image,
         },
         system_controller::{
-            disable_admin, disable_custom, get_admin_list, get_captcha, get_custom_list,
-            get_history_data, get_token_profile, get_withdraw_list, get_withdraw_list_unprocessed,
-            post_login, post_register_admin, put_change_password, put_change_profile, put_recharge,
-            put_upload_avatar, put_withdraw, put_withdraw_process,
+            disable_admin, disable_custom, enable_admin, enable_custom, get_admin_list,
+            get_captcha, get_custom_list, get_history_data, get_token_profile, get_withdraw_list,
+            get_withdraw_list_unprocessed, post_login, post_register_admin, put_change_password,
+            put_change_profile, put_recharge, put_upload_avatar, put_withdraw,
+            put_withdraw_process,
         },
         website_controller::{
             get_admin_bg, get_custom_bg, get_website_logo, get_website_profile,
@@ -58,9 +59,11 @@ pub fn api() -> Router {
             .get(get_history_data)
             // 管理员账号管理
             .push(
-                Router::with_path("/admin")
-                    .get(get_admin_list)
-                    .push(Router::with_path("/<uuid>").put(disable_admin)),
+                Router::with_path("/admin").get(get_admin_list).push(
+                    Router::with_path("/<uuid>")
+                        .put(disable_admin)
+                        .put(enable_admin),
+                ),
             )
             // 处理取款申请
             .push(
@@ -73,7 +76,8 @@ pub fn api() -> Router {
                 Router::with_path("/custom").get(get_custom_list).push(
                     Router::with_path("/<uuid>")
                         .put(disable_custom)
-                        .put(put_recharge),
+                        .put(put_recharge)
+                        .put(enable_custom),
                 ),
             ),
         // 当前登陆用户管理

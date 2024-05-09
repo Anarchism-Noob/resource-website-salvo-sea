@@ -126,6 +126,19 @@ pub async fn disable_admin(admin_uuid: PathParam<String>, depot: &mut Depot) -> 
     AppWriter(_result)
 }
 
+#[endpoint(tags("启用admin账号"))]
+pub async fn enable_admin(admin_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
+
+    if let Err(err) = jwt::parse_token(&token) {
+        return AppError::AnyHow(err).into();
+    }
+    let jwt_model = jwt::parse_token(&token).unwrap();
+    let uuid = jwt_model.user_id;
+    let _result = admin_user_service::enable_admin_user(admin_uuid.0, uuid).await;
+    AppWriter(_result)
+}
+
 #[endpoint(tags("禁用custom账号"))]
 pub async fn disable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
@@ -137,6 +150,19 @@ pub async fn disable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) -
     let jwt_model = jwt::parse_token(&token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::disable_custom_user(custom_uuid.0, uuid).await;
+    AppWriter(_result)
+}
+
+#[endpoint(tags("启用custom账号"))]
+pub async fn enable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
+
+    if let Err(err) = jwt::parse_token(&token) {
+        return AppError::AnyHow(err).into();
+    }
+    let jwt_model = jwt::parse_token(&token).unwrap();
+    let uuid = jwt_model.user_id;
+    let _result = admin_user_service::enable_custom_user(custom_uuid.0, uuid).await;
     AppWriter(_result)
 }
 
