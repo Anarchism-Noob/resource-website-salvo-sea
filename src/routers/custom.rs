@@ -11,7 +11,7 @@ use crate::{
         },
         website_controller::{get_custom_bg, get_website_logo, get_website_profile},
     },
-    middleware::{cors::cors_middleware, jwt, jwt_auth},
+    middleware::{cors::cors_middleware, jwt_auth::{self, jwt_auth_middleware}},
 };
 use salvo::prelude::{CatchPanic, Logger, OpenApi, Router, SwaggerUi};
 
@@ -55,7 +55,7 @@ pub fn api() -> Router {
         .push(
             Router::new()
                 .append(&mut need_auth_routers)
-                .hoop(jwt::jwt_middleware()),
+                .hoop(jwt_auth_middleware),
         );
     let doc = OpenApi::new("Resource WebSite API", "0.1.1").merge_router(&router);
     router

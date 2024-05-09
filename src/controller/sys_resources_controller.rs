@@ -58,8 +58,9 @@ pub async fn get_resource_detail_by_uuid(
     }
     let jwt_model = jwt::parse_token(&token).unwrap();
     let uuid = jwt_model.user_id;
+    let role: Option<u32> = jwt_model.role;
 
-    let result = sys_resource_service::get_resource_detail_by_uuid(resource_uuid, uuid).await;
+    let result = sys_resource_service::get_resource_detail_by_uuid(resource_uuid, uuid, role).await;
     AppWriter(result)
 }
 
@@ -167,15 +168,21 @@ pub async fn put_upload_description(req: &mut Request, res: &mut Response) {
 
             // 提取原始文件名和扩展名
             let original_file_name = file.name().unwrap_or("file");
-            let extension = Path::new(original_file_name)
-                .extension()
-                .unwrap_or_default();
+            let extension = match Path::new(original_file_name).extension() {
+                Some(extension) => extension.to_string_lossy().to_lowercase(),
+                None => return,
+            };
+            // 判断上传的描述文件类型是否为.md或.txt
+            if !extension.eq("md") || !extension.eq("txt") {
+                res.status_code(StatusCode::BAD_REQUEST);
+                res.render(Json("文件类型错误，请上传.md或.txt文件"));
+            }
 
             // 构建新的文件名（保留原始文件的扩展名）
             dest.push(format!(
                 "{}.{}",
                 file_name,
-                extension.to_str().unwrap_or("txt")
+                extension
             ));
 
             // 保存文件

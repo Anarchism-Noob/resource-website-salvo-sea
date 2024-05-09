@@ -42,6 +42,7 @@ pub async fn delete_image(image_uuid: String, user_uuid: String) -> AppResult<()
 pub async fn get_resource_detail_by_uuid(
     resource_uuid: String,
     user_uuid: String,
+    role: Option<u32>,
 ) -> AppResult<SysResourceResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     // 根据前端传回的资源uuid查询资源信息
@@ -68,45 +69,70 @@ pub async fn get_resource_detail_by_uuid(
         .filter(sys_resource_images::Column::ResourceUuid.eq(resource_uuid.clone()))
         .all(db)
         .await?;
+    let description = if resource_model.description_file_path.is_none() {
+        None
+    } else {
+        resource_model.description.clone()
+    };
+    let description_file_path = if resource_model.description_file_path.is_none() {
+        None
+    } else {
+        resource_model.description_file_path.clone()
+    };
     let mut srr_img = Vec::new();
     for item in resource_image_query.clone() {
         let resource_image_path = item.image_path.clone();
         srr_img.push(resource_image_path)
     }
-    // 判断用户是否购买资源
-    if order_by_user.len() > 0 {
-        let order_detail = order_by_user[0].clone();
-        let resource_link = &order_detail.download_link.clone();
-        let description = if resource_model.description_file_path.is_none() {
-            None
+    // 判断role是否为空
+    if role.is_none() {
+        // 判断用户是否购买资源
+        if order_by_user.len() > 0 {
+            let order_detail = order_by_user[0].clone();
+            let resource_link = &order_detail.download_link.clone();
+
+            // 构建 SysResourceResponse 结构体实例并返回
+            return Ok(SysResourceResponse {
+                resource_uuid: resource_model.resource_uuid,
+                resource_name: resource_model.resource_name,
+                description,
+                description_file_path,
+                resource_price: resource_model.resource_price,
+                category: resource_model.category,
+                language: resource_model.language,
+                resource_link: resource_link.clone(),
+                create_user_name: resource_model.create_user_name,
+                resource_image: srr_img,
+            });
+        }
+    } else {
+        // 判断当前用户是否在管理员表中
+        let admin_by_user = SysUser::find_by_id(user_uuid.clone()).one(db).await?;
+        if admin_by_user.is_some() {
+            // 返回完整的资源详情
+            return Ok(SysResourceResponse {
+                resource_uuid: resource_model.resource_uuid,
+                resource_name: resource_model.resource_name,
+                description,
+                description_file_path,
+                resource_price: resource_model.resource_price,
+                category: resource_model.category,
+                language: resource_model.language,
+                resource_link: resource_model.resource_link,
+                create_user_name: resource_model.create_user_name,
+                resource_image: srr_img,
+            });
         } else {
-            resource_model.description.clone()
-        };
-        let description_file_path = if resource_model.description_file_path.is_none() {
-            None
-        } else {
-            resource_model.description_file_path.clone()
-        };
-        // 构建 SysResourceResponse 结构体实例并返回
-        return Ok(SysResourceResponse {
-            resource_uuid: resource_model.resource_uuid,
-            resource_name: resource_model.resource_name,
-            description,
-            description_file_path,
-            resource_price: resource_model.resource_price,
-            category: resource_model.category,
-            language: resource_model.language,
-            resource_link: resource_link.clone(),
-            create_user_name: resource_model.create_user_name,
-            resource_image: srr_img,
-        });
+            return Err(anyhow::anyhow!("token被篡改，请重新登录").into());
+        }
     }
+
     // 如果用户未购买资源，返回默认的 SysResourceResponse 实例
     Ok(SysResourceResponse {
         resource_uuid: resource_model.resource_uuid,
         resource_name: resource_model.resource_name,
-        description: resource_model.description,
-        description_file_path: None,
+        description,
+        description_file_path,
         resource_price: resource_model.resource_price,
         category: resource_model.category,
         language: resource_model.language,
