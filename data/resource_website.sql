@@ -1,10 +1,10 @@
 /*
  Navicat Premium Data Transfer
 
- Source Server         : 192.168.1.21_3306
+ Source Server         : 
  Source Server Type    : MySQL
  Source Server Version : 80300
- Source Host           : 192.168.1.21:3306
+ Source Host           : 
  Source Schema         : resource_website
 
  Target Server Type    : MySQL
