@@ -1,3 +1,4 @@
+pub mod count_data_dto;
 pub mod custom_orders_dto;
 pub mod custom_recharge_dto;
 pub mod custom_user_dto;

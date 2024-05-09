@@ -17,19 +17,20 @@ use salvo::prelude::{CatchPanic, Logger, OpenApi, Router, SwaggerUi};
 
 pub fn api() -> Router {
     let mut no_auth_router = vec![
-        Router::with_path("/login").post(post_login),
-        Router::with_path("/register").post(post_register),
         Router::with_path("/captcha").get(get_captcha),
-        Router::with_path("/index").get(get_resource_list),
-        Router::with_path("/resource/<language>").get(get_resource_list_of_language),
-        Router::with_path("/resource/<category>").get(get_resources_of_category),
-        Router::with_path("/resource/<language>/<category>")
-            .get(get_resources_of_category_and_language),
-        Router::with_path("/resource/<uuid>").get(get_resource_detail_by_uuid),
-        Router::with_path("/carousel").get(get_carousel),
-        Router::with_path("/website/profile").get(get_website_profile),
-        Router::with_path("/logo").get(get_website_logo),
-        Router::with_path("/login/bg").get(get_custom_bg),
+        Router::with_path("/website").get(get_website_profile),
+        // 用户登陆
+        Router::with_path("/login").post(post_login),
+        // 用户注册
+        Router::with_path("/register").post(post_register),
+        // 首页
+        Router::with_path("/index")
+        .get(get_resource_list)
+        .get(get_carousel)
+        .push(Router::with_path("/<language>").get(get_resource_list_of_language))
+        .push(Router::with_path("/<category>").get(get_resources_of_category))
+        .push(Router::with_path("/<language>/<category>").get(get_resources_of_category_and_language))
+        .push(Router::with_path("/<uuid>").get(get_resource_detail_by_uuid)),
     ];
 
     let _cors_handler = cors_middleware();
@@ -37,7 +38,7 @@ pub fn api() -> Router {
     let mut need_auth_routers = vec![
         Router::with_path("/orders/<uuid>").get(get_orders),
         Router::with_path("/resource/<uuid>").put(put_buy_resource),
-        Router::with_path("/profile/<uuid>")
+        Router::with_path("/Custom/<uuid>")
         .get(get_user_profile)
         .put(put_change_password)
         .put(put_change_profile)

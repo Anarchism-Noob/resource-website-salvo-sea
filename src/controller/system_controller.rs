@@ -1,13 +1,10 @@
 use crate::{
     app_writer::{AppResult, AppWriter, ErrorResponseBuilder},
     dtos::{
-        custom_orders_dto::CustomOrderResponse,
-        custom_user_dto::{CustomUserProfileResponse, RechargeOfAdminRequest},
-        sys_user_dto::{
+        count_data_dto::CountDataResponse, custom_orders_dto::CustomOrderResponse, custom_user_dto::{CustomUserProfileResponse, RechargeOfAdminRequest}, sys_user_dto::{
             ChangeAdminProfileRequest, ChangeAdminPwdRequest, SysLoginRequest, SysLoginResponse,
             SysUserCrateRequest, SysUserProfileResponse,
-        },
-        withdrawals_dto::WithdrawalsResponse,
+        }, withdrawals_dto::WithdrawalsResponse
     },
     middleware::jwt::{self, JwtClaims},
     services::admin_user_service,
@@ -31,6 +28,20 @@ use std::{
     path::{Path, PathBuf},
 };
 use uuid::Uuid;
+
+
+#[endpoint(tags("获取历史数据"))]
+pub async fn get_history_data(depot: &mut Depot) -> AppWriter<CountDataResponse> {
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
+
+    if let Err(err) = jwt::parse_token(&token) {
+        return AppError::AnyHow(err).into();
+    }
+    let jwt_model = jwt::parse_token(&token).unwrap();
+    let uuid = jwt_model.user_id;
+    let _result = admin_user_service::get_history_data(uuid).await;
+    AppWriter(_result)
+}
 
 #[endpoint(tags("处理取款申请"))]
 pub async fn put_withdraw_process(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<()> {
@@ -178,7 +189,7 @@ pub async fn put_change_profile(
 
 // 获取用户详细信息
 #[endpoint(tags("获取当前用户详情"))]
-pub async fn get_user_profile(depot: &mut Depot) -> AppWriter<SysUserProfileResponse> {
+pub async fn get_token_profile(depot: &mut Depot) -> AppWriter<SysUserProfileResponse> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {

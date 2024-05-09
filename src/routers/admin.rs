@@ -11,8 +11,8 @@ use crate::{
         },
         system_controller::{
             disable_admin, disable_custom, get_admin_list, get_captcha, get_custom_list,
-            get_user_profile, get_withdraw_list, get_withdraw_list_unprocessed, post_login,
-            post_register_admin, put_change_password, put_change_profile, put_recharge,
+            get_history_data, get_token_profile, get_withdraw_list, get_withdraw_list_unprocessed,
+            post_login, post_register_admin, put_change_password, put_change_profile, put_recharge,
             put_upload_avatar, put_withdraw, put_withdraw_process,
         },
         website_controller::{
@@ -20,7 +20,11 @@ use crate::{
             update_website_profile, upload_admin_bg, upload_custom_bg, upload_website_logo,
         },
     },
-    middleware::{cors::cors_middleware, jwt, jwt_auth::{self, jwt_auth_middleware}},
+    middleware::{
+        cors::cors_middleware,
+        jwt,
+        jwt_auth::{self, jwt_auth_middleware},
+    },
 };
 use salvo::prelude::{CatchPanic, Logger, OpenApi, Router, SwaggerUi};
 
@@ -48,35 +52,53 @@ pub fn api() -> Router {
     let _cors_handler = cors_middleware();
 
     let mut need_auth_router = vec![
-        Router::with_path("/create/admin").post(post_register_admin),
-        //管理员侧管理
-        Router::with_path("/admin/list").get(get_admin_list),
-        Router::with_path("/admin/disable/<uuid>").put(disable_admin),
-        Router::with_path("/withdraw/list")
-            .get(get_withdraw_list)
-            .put(put_withdraw),
-        Router::with_path("/unprocessed/list")
-            .get(get_withdraw_list_unprocessed)
-            .put(put_withdraw_process),
-        // 用户侧管理
-        Router::with_path("/custom/list").get(get_custom_list),
-        Router::with_path("/custom/disable/<uuid>").put(disable_custom),
-        Router::with_path("/recharge/<uuid>").put(put_recharge),
+        Router::with_path("/create").post(post_register_admin),
+        //账号侧管理
+        Router::with_path("/manager")
+            .get(get_history_data)
+            // 管理员账号管理
+            .push(
+                Router::with_path("/admin")
+                    .get(get_admin_list)
+                    .push(Router::with_path("/<uuid>").put(disable_admin)),
+            )
+            // 处理取款申请
+            .push(
+                Router::with_path("/unprocessed")
+                    .get(get_withdraw_list_unprocessed)
+                    .push(Router::with_path("/<uuid>").put(put_withdraw_process)),
+            )
+            // 用户账号管理
+            .push(
+                Router::with_path("/custom").get(get_custom_list).push(
+                    Router::with_path("/<uuid>")
+                        .put(disable_custom)
+                        .put(put_recharge),
+                ),
+            ),
         // 当前登陆用户管理
-        Router::with_path("/profile/<uuid>")
-            .get(get_user_profile)
+        Router::with_path("/admin/<uuid>")
+            .get(get_token_profile)
+            .get(get_withdraw_list)
+            .put(put_withdraw)
             .put(put_change_password)
             .put(put_change_profile)
             .put(put_upload_avatar),
         // 资源管理
-        Router::with_path("/resource/create")
+        Router::with_path("/resource")
             .post(post_create_resource)
             .push(Router::with_path("/upload/image").post(put_upload_image))
             .push(Router::with_path("/upload/des").post(put_upload_description))
             .push(Router::with_path("/delete/image/<uuid>").delete(delete_image)),
         Router::with_path("/resource/<uuid>").put(put_change_link),
-        Router::with_path("/language/create").post(post_create_language),
-        Router::with_path("/category/create").post(create_category),
+        // 语言管理
+        Router::with_path("/language")
+            .post(post_create_language)
+            .push(Router::with_path("/<id>").delete(delete_category)),
+        // 分类管理
+        Router::with_path("/category")
+            .post(create_category)
+            .push(Router::with_path("/<id>").delete(delete_category)),
         // 轮播图
         Router::with_path("/carousel/create")
             .post(post_upload_carousel)
@@ -97,7 +119,7 @@ pub fn api() -> Router {
         .push(
             Router::new()
                 .hoop(jwt_auth_middleware)
-                .append(&mut need_auth_router),  
+                .append(&mut need_auth_router),
         );
     let doc = OpenApi::new("Resource Management API", "0.1.1").merge_router(&router);
     router

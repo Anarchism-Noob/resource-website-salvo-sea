@@ -9,8 +9,8 @@ use crate::{
         },
     },
     entities::{
-        custom_orders, custom_user,
-        prelude::{CustomOrders, CustomUser, SysResources, SysUser},
+        count_data, custom_orders, custom_user,
+        prelude::{CountData, CustomOrders, CustomUser, SysResources, SysUser},
         sys_resources, sys_user,
     },
     middleware::jwt::get_token,
@@ -196,6 +196,12 @@ pub async fn buy_resource_request(
         .one(db)
         .await?;
     let order_res = order_query.unwrap();
+    // 更新交易次数计数
+    let count_data = CountData::find().one(db).await?;
+    let mut count_data_model: count_data::ActiveModel = count_data.clone().unwrap().into();
+    count_data_model.count_deal = Set(count_data.unwrap().count_deal + 1);
+    count_data_model.update(db).await?;
+
     Ok(CustomOrderResponse {
         order_uuid: order_res.order_uuid.to_string(),
         resource_uuid: order_res.resource_uuid.to_string(),
@@ -261,6 +267,12 @@ pub async fn registry(req: CustomUserRegisterRequest) -> AppResult<CustomUserRes
         .one(db)
         .await?;
     let user_model = user_query.unwrap();
+    // 更新用户数量计数
+    let count_data = CountData::find().one(db).await?;
+    let mut count_data_model: count_data::ActiveModel = count_data.clone().unwrap().into();
+    count_data_model.count_custom = Set(count_data.unwrap().count_custom + 1);
+    count_data_model.update(db).await?;
+
     Ok(CustomUserResponse {
         user_uuid: user_model.user_uuid,
         nick_name: user_model.nick_name.clone(),

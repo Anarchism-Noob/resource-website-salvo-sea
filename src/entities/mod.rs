@@ -2,6 +2,7 @@
 
 pub mod prelude;
 
+pub mod count_data;
 pub mod custom_orders;
 pub mod custom_recharge;
 pub mod custom_user;

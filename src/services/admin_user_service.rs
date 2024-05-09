@@ -2,6 +2,7 @@ use crate::{
     app_writer::AppResult,
     config::CFG,
     dtos::{
+        count_data_dto::CountDataResponse,
         custom_user_dto::{CustomUserProfileResponse, RechargeOfAdminRequest},
         sys_resources_dto::{SysResourceCreateRequest, SysResourceResponse},
         sys_user_dto::{
@@ -11,8 +12,8 @@ use crate::{
         withdrawals_dto::WithdrawalsResponse,
     },
     entities::{
-        custom_orders, custom_recharge, custom_user,
-        prelude::{CustomOrders, CustomUser, SysImage, SysResources, SysUser},
+        count_data, custom_orders, custom_recharge, custom_user,
+        prelude::{CountData, CustomOrders, CustomUser, SysImage, SysResources, SysUser},
         sys_image, sys_resource_images, sys_resources, sys_user, withdrawals,
     },
     middleware::jwt::get_token,
@@ -33,7 +34,7 @@ pub async fn super_admin_init() {
         user_name: Set("superadmin".to_string()),
         user_pwd: Set(rand_utils::hash_password(user_pwd).await.unwrap()),
         balance: Set(Default::default()),
-        liaison: Set("@slurred_frogfun".to_string()),
+        liaison: Set("/t.me/slurred_frogfun".to_string()),
         user_status: Set(0),
         role: Set(0),
         avatar_path: Set("../assets/avatar/default.png".to_string()),
@@ -43,6 +44,28 @@ pub async fn super_admin_init() {
     .unwrap();
 }
 
+// 获取计数数据
+pub async fn get_history_data(uuid: String) -> AppResult<CountDataResponse> {
+    let db = DB.get().ok_or("数据库连接失败").unwrap();
+    let data_query = CountData::find().one(db).await?;
+    let data_model = data_query.clone().unwrap();
+    // 查询用户数量
+    let user_query = CustomUser::find().all(db).await?;
+    let count_custom: u64 = user_query.len().try_into().unwrap();
+    // 判断计数数据中的数据是否正确
+    if data_model.count_deal != count_custom {
+        let mut data_model: count_data::ActiveModel = data_query.clone().unwrap().into();
+        data_model.count_deal = Set(count_custom);
+        data_model.update(db).await?;
+    }
+    Ok(CountDataResponse {
+        count_deal: data_model.count_deal,
+        count_recharge: data_model.count_recharge,
+        count_withdraw: data_model.count_withdraw,
+        count_custom: data_model.count_custom,
+    })
+}
+
 // 处理取款申请
 pub async fn post_withdraw_process(withdrawals_uuid: String, uuid: String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
@@ -50,6 +73,7 @@ pub async fn post_withdraw_process(withdrawals_uuid: String, uuid: String) -> Ap
     let withdrawals_query = withdrawals::Entity::find_by_id(&withdrawals_uuid)
         .one(db)
         .await?;
+    let count_quantities = withdrawals_query.clone().unwrap().quantities;
     let mut withdrawals_model: withdrawals::ActiveModel = withdrawals_query.clone().unwrap().into();
     withdrawals_model.status = Set(0);
     withdrawals_model.succes_date = Set(Some(Utc::now().naive_utc()));
@@ -67,6 +91,12 @@ pub async fn post_withdraw_process(withdrawals_uuid: String, uuid: String) -> Ap
         super_admin_query.clone().unwrap().balance + withdrawals_query.unwrap().tariff;
     super_admin_model.balance = Set(super_admin_balance);
     super_admin_model.update(db).await?;
+    // 更新取款金额计数
+    let count_data_query = CountData::find().one(db).await?;
+    let mut count_data_model: count_data::ActiveModel = count_data_query.clone().unwrap().into();
+    count_data_model.count_withdraw =
+        Set(count_data_query.unwrap().count_withdraw + count_quantities);
+    count_data_model.update(db).await?;
     Ok(())
 }
 
@@ -135,6 +165,10 @@ pub async fn post_withdrawals(req: u64, uuid: String) -> AppResult<()> {
 
     let mut change_model: sys_user::ActiveModel = admin_model.clone().into();
     // 扣除取款金额
+    // 判断取款数额是否超过余额
+    if admin_model.balance < req {
+        return Err(anyhow::anyhow!("余额不足").into());
+    }
     let balance = admin_model.balance - req;
     // 计算手续费，向上取整
     let tariff_to = ((req as f64) * tariff).ceil() as u64;
@@ -158,6 +192,7 @@ pub async fn post_withdrawals(req: u64, uuid: String) -> AppResult<()> {
     Ok(())
 }
 
+// 手动充值
 pub async fn recharge_for_custom(
     from_data: RechargeOfAdminRequest,
     admin_uuid: String,
@@ -178,7 +213,7 @@ pub async fn recharge_for_custom(
     custom_recharge::ActiveModel {
         record_uuid: Set(Uuid::new_v4().to_string()),
         user_uuid: Set(from_data.user_uuid),
-        recharge_amount: Set(from_data.balance_usdt.into()),
+        recharge_amount: Set(from_data.balance_usdt.clone()),
         payment_channel: Set("线下充值".to_string()),
         recharge_date: Set(Local::now().naive_utc()),
         recharge_status: Set(2),
@@ -187,9 +222,17 @@ pub async fn recharge_for_custom(
     }
     .save(db)
     .await?;
+    // 更新充值金额计数
+    let count_data_query = CountData::find().one(db).await?;
+    let mut count_data_model: count_data::ActiveModel = count_data_query.clone().unwrap().into();
+    count_data_model.count_recharge =
+        Set(count_data_query.unwrap().count_recharge + from_data.balance_usdt);
+    count_data_model.update(db).await?;
+
     Ok(())
 }
 
+// 禁用管理员账号
 pub async fn disable_admin_user(admin_uuid: String, uuid: String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let depot_query = SysUser::find_by_id(uuid).one(db).await?;
@@ -206,6 +249,7 @@ pub async fn disable_admin_user(admin_uuid: String, uuid: String) -> AppResult<(
     Ok(())
 }
 
+// 禁用自定义用户
 pub async fn disable_custom_user(custom_uuid: String, admin_uuid: String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
@@ -219,6 +263,7 @@ pub async fn disable_custom_user(custom_uuid: String, admin_uuid: String) -> App
     Ok(())
 }
 
+// 更改当前用户信息
 pub async fn change_profile(
     form_data: ChangeAdminProfileRequest,
     uuid: String,
@@ -242,24 +287,7 @@ pub async fn change_profile(
     })
 }
 
-pub async fn get_user_profile(uuid: String) -> AppResult<SysUserProfileResponse> {
-    let db = DB.get().ok_or("数据库连接失败").unwrap();
-    let user_query = SysUser::find()
-        .filter(sys_user::Column::UserUuid.eq(uuid))
-        .one(db)
-        .await?;
-    let user_model = user_query.clone().unwrap();
-    Ok(SysUserProfileResponse {
-        user_uuid: user_model.user_uuid,
-        nick_name: user_model.nick_name,
-        user_name: user_model.user_name,
-        liaison: user_model.liaison,
-        balance: user_model.balance,
-        role: user_model.role,
-        avatar_path: user_model.avatar_path,
-    })
-}
-
+// 保存头像
 pub async fn save_avatar(avatar_path: String, uuid: String) -> AppResult<SysUserProfileResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let user_query = SysUser::find_by_id(uuid).one(db).await?;
@@ -277,6 +305,7 @@ pub async fn save_avatar(avatar_path: String, uuid: String) -> AppResult<SysUser
     })
 }
 
+// 校验用户名是否存在
 pub async fn check_user_name(req: String) -> AppResult<()> {
     let db = DB.get().ok_or(anyhow::anyhow!("数据库连接失败"))?;
     let user_query = CustomUser::find()
@@ -289,6 +318,7 @@ pub async fn check_user_name(req: String) -> AppResult<()> {
     Ok(())
 }
 
+// 更改当前用户密码
 pub async fn change_admin_password(
     form_data: ChangeAdminPwdRequest,
     uuid: String,
@@ -306,6 +336,7 @@ pub async fn change_admin_password(
     Ok(())
 }
 
+// 创建管理员或挂售个商
 pub async fn create_admin_user(from_data: SysUserCrateRequest, uuid: String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     if from_data.role == 0 {
@@ -331,6 +362,7 @@ pub async fn create_admin_user(from_data: SysUserCrateRequest, uuid: String) -> 
     Ok(())
 }
 
+// 登陆
 pub async fn login(form_data: SysLoginRequest) -> AppResult<SysLoginResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let user_query = SysUser::find()
@@ -366,6 +398,7 @@ pub async fn login(form_data: SysLoginRequest) -> AppResult<SysLoginResponse> {
         exp,
     })
 }
+
 // 查看当前用户详情
 pub async fn get_admin_profile(user_uuid: String) -> AppResult<SysUserProfileResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
@@ -385,6 +418,7 @@ pub async fn get_admin_profile(user_uuid: String) -> AppResult<SysUserProfileRes
     })
 }
 
+// 查看自定义用户列表
 pub async fn list_custom_user(uuid: String) -> AppResult<Vec<CustomUserProfileResponse>> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let user_query = SysUser::find()
