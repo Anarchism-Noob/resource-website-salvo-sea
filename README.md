@@ -16,7 +16,7 @@ cargo run
 
 - Docking Rainbow Easy Pay (or uses tron-sdk realization of receipts) ×
 - I would like to use anychain-tron provided by Cregis for TRC-20 receipts 
-- Routing Privilege Control
+- Routing Privilege Control （Temporarily realized）
 - WebSocket Message Push
 - Web
 
