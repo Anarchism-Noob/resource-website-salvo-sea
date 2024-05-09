@@ -228,12 +228,14 @@ pub async fn put_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut R
                 res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
                 format!("file not found in request: {}", e)
             } else {
+                res.status_code(StatusCode::OK);
                 format!("{:?}", dest)
             };
 
             let _result =
                 admin_user_service::save_avatar(dest.to_str().unwrap_or("").to_string(), uuid)
                     .await;
+
             res.render(Json(info));
         }
     } else {

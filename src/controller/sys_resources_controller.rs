@@ -156,6 +156,45 @@ pub async fn post_create_resource(
     res.status_code(StatusCode::CREATED);
 }
 
+#[endpoint(tags("上传描述文件"))]
+pub async fn put_upload_description(req: &mut Request, res: &mut Response) {
+    let file = req.file("description").await;
+    if let Some(file) = file {
+        let mime = file.content_type().unwrap().to_string();
+        if mime.starts_with("text/") {
+            let file_name = Uuid::new_v4().to_string();
+            let mut dest = PathBuf::from("../assets/uploads/description/");
+
+            // 提取原始文件名和扩展名
+            let original_file_name = file.name().unwrap_or("file");
+            let extension = Path::new(original_file_name)
+                .extension()
+                .unwrap_or_default();
+
+            // 构建新的文件名（保留原始文件的扩展名）
+            dest.push(format!(
+                "{}.{}",
+                file_name,
+                extension.to_str().unwrap_or("txt")
+            ));
+
+            // 保存文件
+            let info = if let Err(e) = std::fs::copy(&file.path(), &dest) {
+                res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
+                format!("file not found in request: {}", e)
+            } else {
+                res.status_code(StatusCode::OK);
+                format!("{:?}", dest)
+            };
+
+            res.render(Json(info));
+        }
+    } else {
+        res.status_code(StatusCode::BAD_REQUEST);
+        res.render(Json("file not found in request"));
+    }
+}
+
 //上传资源截图
 #[endpoint(tags("上传图片"))]
 pub async fn put_upload_image(req: &mut Request, res: &mut Response) {
@@ -189,8 +228,8 @@ pub async fn put_upload_image(req: &mut Request, res: &mut Response) {
                 }
             }
         }
-        sys_resource_service::save_resource_image(msgs);
-        // res.render(Json(msgs));
+        sys_resource_service::save_resource_image(msgs.clone());
+        res.render(Json(&msgs));
     } else {
         res.status_code(StatusCode::BAD_REQUEST);
         res.render(Json("file not found in request"));
