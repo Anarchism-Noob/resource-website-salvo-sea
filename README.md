@@ -14,7 +14,8 @@ cargo run
 
 # Pending
 
-- Docking Rainbow Easy Pay (or uses tron-sdk realization of receipts)
+- Docking Rainbow Easy Pay (or uses tron-sdk realization of receipts) ×
+- I would like to use anychain-tron provided by Cregis for TRC-20 receipts 
 - Routing Privilege Control
 - WebSocket Message Push
 - Web
