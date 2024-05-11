@@ -4,7 +4,7 @@ use crate::{
             delete_carousel, get_carousel, post_upload_carousel, put_create_carousel,
         },
         resource_category_controller::{create_category, delete_category, get_category_list},
-        resource_language_controller::{delete_language, get_dev_languages, post_create_language},
+        resource_language_controller::{get_dev_languages, post_create_language},
         sys_resources_controller::{
             delete_image, post_create_resource, put_change_link, put_upload_description,
             put_upload_image,
@@ -23,8 +23,7 @@ use crate::{
     },
     middleware::{
         cors::cors_middleware,
-        jwt,
-        jwt_auth::{self, jwt_auth_middleware},
+        jwt_auth::jwt_auth_middleware,
     },
 };
 use salvo::prelude::{CatchPanic, Logger, OpenApi, Router, SwaggerUi};

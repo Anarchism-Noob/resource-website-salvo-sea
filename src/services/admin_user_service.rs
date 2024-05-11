@@ -28,11 +28,17 @@ use uuid::Uuid;
 pub async fn super_admin_init() {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let user_pwd = "waqu2024".to_string();
+    let hashed_pwd = match rand_utils::hash_password(user_pwd).await {
+        Ok(pwd) => pwd,
+        Err(err) => {
+            panic!("密码哈希失败: {:?}", err);
+        }
+    };
     sys_user::ActiveModel {
         user_uuid: Set(Uuid::new_v4().to_string()),
         nick_name: Set("超级管理员".to_string()),
         user_name: Set("superadmin".to_string()),
-        user_pwd: Set(rand_utils::hash_password(user_pwd).await.unwrap()),
+        user_pwd: Set(hashed_pwd),
         balance: Set(Default::default()),
         liaison: Set("/t.me/slurred_frogfun".to_string()),
         user_status: Set(0),
@@ -41,7 +47,7 @@ pub async fn super_admin_init() {
     }
     .save(db)
     .await
-    .unwrap();
+    .expect("超级管理员初始化失败");
 }
 
 // 获取计数数据

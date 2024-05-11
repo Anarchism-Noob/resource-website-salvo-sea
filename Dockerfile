@@ -34,3 +34,6 @@ COPY --from=builder /usr/src/resource-website/assets ./assets
 
 # 运行应用程序
 CMD ["resource-website"]
+
+# 构建镜像：docker build -t my-rust-web-app .
+#运行：docker run my-rust-web-app
