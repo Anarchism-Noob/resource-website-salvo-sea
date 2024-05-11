@@ -1,22 +1,14 @@
 use crate::{
-    config::CFG,
     middleware::jwt,
     utils::{
-        app_error::AppError,
         check_user::{check_user_admin, check_user_custom},
     },
 };
-use anyhow::Result;
-use jsonwebtoken::{decode, Algorithm, DecodingKey, EncodingKey, Validation};
-use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use salvo::{
     hyper::Uri,
-    jwt_auth::{ConstDecoder, CookieFinder, HeaderFinder, QueryFinder},
     prelude::*,
 };
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use time::{Duration, OffsetDateTime};
 
 #[handler]
 pub async fn jwt_auth_middleware(

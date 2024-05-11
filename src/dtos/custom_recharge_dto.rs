@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
-use salvo::prelude::{Extractible, ToSchema};
-use sea_orm::prelude::Decimal;
-use serde::{Deserialize, Serialize};
+use salvo::prelude::{ToSchema};
+use serde::{Deserialize};
 use validator::Validate;
 
 #[derive(Deserialize, Debug, Validate, ToSchema, Default)]

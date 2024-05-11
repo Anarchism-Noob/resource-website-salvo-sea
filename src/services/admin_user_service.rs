@@ -4,7 +4,6 @@ use crate::{
     dtos::{
         count_data_dto::CountDataResponse,
         custom_user_dto::{CustomUserProfileResponse, RechargeOfAdminRequest},
-        sys_resources_dto::{SysResourceCreateRequest, SysResourceResponse},
         sys_user_dto::{
             ChangeAdminProfileRequest, ChangeAdminPwdRequest, SysLoginRequest, SysLoginResponse,
             SysUserCrateRequest, SysUserProfileResponse,
@@ -12,16 +11,14 @@ use crate::{
         withdrawals_dto::WithdrawalsResponse,
     },
     entities::{
-        count_data, custom_orders, custom_recharge, custom_user,
-        prelude::{CountData, CustomOrders, CustomUser, SysImage, SysResources, SysUser},
-        sys_image, sys_resource_images, sys_resources, sys_user, withdrawals,
+        count_data, custom_recharge, custom_user,
+        prelude::{CountData, CustomUser, SysUser}, sys_user, withdrawals,
     },
     middleware::jwt::get_token,
     utils::{db::DB, rand_utils, redis_utils::*},
 };
-use chrono::{Local, NaiveDate, Utc};
-use redis::{Client, RedisResult};
-use sea_orm::{prelude::Decimal, *};
+use chrono::{Local, Utc};
+use sea_orm::{*};
 use serde_json;
 use uuid::Uuid;
 

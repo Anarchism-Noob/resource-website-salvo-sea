@@ -1,6 +1,6 @@
-use salvo::prelude::{Extractible, ToSchema};
+use salvo::prelude::{ToSchema};
 use sea_orm::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::{Serialize};
 use validator::Validate;
 
 #[derive(Serialize, Debug, Validate, ToSchema, Default)]

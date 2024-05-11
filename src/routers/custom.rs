@@ -9,9 +9,9 @@ use crate::{
             get_resource_detail_by_uuid, get_resource_list, get_resource_list_of_language,
             get_resources_of_category, get_resources_of_category_and_language,
         },
-        website_controller::{get_custom_bg, get_website_logo, get_website_profile},
+        website_controller::{get_website_profile},
     },
-    middleware::{cors::cors_middleware, jwt_auth::{self, jwt_auth_middleware}},
+    middleware::{cors::cors_middleware, jwt_auth::{jwt_auth_middleware}},
 };
 use salvo::prelude::{CatchPanic, Logger, OpenApi, Router, SwaggerUi};
 

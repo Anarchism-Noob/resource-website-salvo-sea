@@ -3,7 +3,7 @@ use crate::{
     dtos::sys_language_dto::QueryLanguageResponse,
     entities::{
         prelude::{SysResourceLanguage, SysUser},
-        sys_resource_language, sys_user,
+        sys_resource_language,
     },
     utils::db::DB,
 };

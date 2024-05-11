@@ -1,7 +1,6 @@
 use crate::{
-    app_writer::{AppResult, AppWriter, ErrorResponseBuilder},
+    app_writer::{AppWriter, ErrorResponseBuilder},
     dtos::{
-        sys_image_dto::SysImageCrateRequest,
         sys_resources_dto::{
             PaginationParams, SysResourceChangeLink, SysResourceCreateRequest, SysResourceList,
             SysResourceResponse,
@@ -11,12 +10,10 @@ use crate::{
     services::sys_resource_service,
     utils::{
         app_error::AppError,
-        captcha_utils::{generate_captcha, varify_captcha, CaptchaImage},
-        redis_utils::get_redis_pool,
     },
 };
 use salvo::{
-    http::{cookie::Cookie, ParseError, StatusCode},
+    http::{StatusCode},
     oapi::{
         endpoint,
         extract::{JsonBody, PathParam},
@@ -25,7 +22,6 @@ use salvo::{
     Depot, Request, Response, Writer,
 };
 use std::{
-    fs::create_dir_all,
     path::{Path, PathBuf},
 };
 use uuid::Uuid;

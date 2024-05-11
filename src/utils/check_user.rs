@@ -1,13 +1,10 @@
 use crate::{
-    dtos::{custom_user_dto::CustomUserProfileResponse, sys_user_dto::SysUserProfileResponse},
     entities::{
         custom_user,
-        prelude::{CustomUser, SysUser},
         sys_user,
     },
-    utils::{app_error::AppError, app_writer::AppResult, db::DB},
+    utils::{db::DB},
 };
-use core::any::Any;
 use sea_orm::*;
 
 pub async fn check_user_custom(uuid: &String) -> Result<custom_user::Model, anyhow::Error> {

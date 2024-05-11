@@ -3,7 +3,7 @@ use crate::{
     dtos::sys_category_dto::QueryCategoryResponse,
     entities::{
         prelude::{SysResourceCategoty, SysUser},
-        sys_resource_category, sys_user,
+        sys_resource_category,
     },
     utils::db::DB,
 };

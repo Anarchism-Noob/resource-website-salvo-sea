@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use salvo::prelude::{Extractible, ToSchema};
+use salvo::prelude::{ToSchema};
 use sea_orm::prelude::Decimal;
 use serde::{Deserialize, Serialize};
 use validator::Validate;

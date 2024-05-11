@@ -4,11 +4,11 @@ use crate::{
     services::sys_carousel_service,
     utils::{
         app_error::AppError,
-        app_writer::{AppResult, AppWriter, ErrorResponseBuilder},
+        app_writer::{AppWriter},
     },
 };
 use salvo::{
-    http::{cookie::Cookie, ParseError, StatusCode},
+    http::{StatusCode},
     oapi::{
         endpoint,
         extract::{JsonBody, PathParam},
@@ -17,7 +17,6 @@ use salvo::{
     Depot, Request, Response, Writer,
 };
 use std::{
-    fs::create_dir_all,
     path::{Path, PathBuf},
 };
 use uuid::Uuid;

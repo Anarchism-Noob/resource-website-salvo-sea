@@ -1,22 +1,19 @@
 use crate::{
     app_writer::AppResult,
     dtos::{
-        sys_resource_images_dto::SysResourceImageCreateRequest,
         sys_resources_dto::{
             SysResourceChangeLink, SysResourceCreateRequest, SysResourceList, SysResourceResponse,
         },
     },
     entities::{
-        custom_orders, custom_user,
-        prelude::{CustomOrders, CustomUser, SysImage, SysResourceImages, SysResources, SysUser},
-        sys_image, sys_resource_images, sys_resources, sys_user,
+        custom_user,
+        prelude::{CustomOrders, SysImage, SysResourceImages, SysResources, SysUser},
+        sys_image, sys_resource_images, sys_resources,
     },
-    middleware::jwt::get_token,
-    services::sys_resource_service::sea_query::Query,
-    utils::{app_error::AppError, db::DB, rand_utils, redis_utils},
+    utils::{db::DB},
 };
-use chrono::{format::Item, Local, NaiveDate, Utc};
-use sea_orm::{sea_query::Expr, *};
+use chrono::{Local};
+use sea_orm::{*};
 use uuid::Uuid;
 
 pub async fn delete_image(image_uuid: String, user_uuid: String) -> AppResult<()> {

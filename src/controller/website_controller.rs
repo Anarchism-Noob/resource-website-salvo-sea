@@ -4,20 +4,19 @@ use crate::{
     services::website_service,
     utils::{
         app_error::AppError,
-        app_writer::{AppResult, AppWriter, ErrorResponseBuilder},
+        app_writer::{AppWriter, ErrorResponseBuilder},
     },
 };
 use salvo::{
-    http::{cookie::Cookie, ParseError, StatusCode},
+    http::{StatusCode},
     oapi::{
         endpoint,
-        extract::{JsonBody, PathParam},
+        extract::{JsonBody},
     },
     prelude::Json,
     Depot, Request, Response, Writer,
 };
 use std::{
-    fs::create_dir_all,
     path::{Path, PathBuf},
 };
 use uuid::Uuid;
@@ -32,7 +31,7 @@ pub async fn get_admin_bg() -> AppWriter<String> {
 }
 
 #[endpoint(tags("上传管理员登陆背景"))]
-pub async fn upload_admin_bg(mut req: &mut Request, depot: &mut Depot, res: &mut Response) {
+pub async fn upload_admin_bg(req: &mut Request, depot: &mut Depot, res: &mut Response) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
@@ -90,7 +89,7 @@ pub async fn get_custom_bg() -> AppWriter<String> {
 }
 
 #[endpoint(tags("上传客户登录页面背景图"))]
-pub async fn upload_custom_bg(mut req: &mut Request, depot: &mut Depot, res: &mut Response) {
+pub async fn upload_custom_bg(req: &mut Request, depot: &mut Depot, res: &mut Response) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
@@ -149,7 +148,7 @@ pub async fn get_website_logo() -> AppWriter<String> {
 }
 
 #[endpoint(tags("上传网站logo"))]
-pub async fn upload_website_logo(mut req: &mut Request, depot: &mut Depot, res: &mut Response) {
+pub async fn upload_website_logo(req: &mut Request, depot: &mut Depot, res: &mut Response) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {

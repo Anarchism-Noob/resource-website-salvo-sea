@@ -1,21 +1,20 @@
 use crate::{
     app_writer::{AppResult, AppWriter, ErrorResponseBuilder},
     dtos::{
-        count_data_dto::CountDataResponse, custom_orders_dto::CustomOrderResponse, custom_user_dto::{CustomUserProfileResponse, RechargeOfAdminRequest}, sys_user_dto::{
+        count_data_dto::CountDataResponse, custom_user_dto::{CustomUserProfileResponse, RechargeOfAdminRequest}, sys_user_dto::{
             ChangeAdminProfileRequest, ChangeAdminPwdRequest, SysLoginRequest, SysLoginResponse,
             SysUserCrateRequest, SysUserProfileResponse,
         }, withdrawals_dto::WithdrawalsResponse
     },
-    middleware::jwt::{self, JwtClaims},
+    middleware::jwt::{self},
     services::admin_user_service,
     utils::{
         app_error::AppError,
         captcha_utils::{generate_captcha, varify_captcha, CaptchaImage},
-        redis_utils::get_redis_pool,
     },
 };
 use salvo::{
-    http::{cookie::Cookie, ParseError, StatusCode},
+    http::{cookie::Cookie, StatusCode},
     oapi::{
         endpoint,
         extract::{JsonBody, PathParam},
@@ -24,7 +23,6 @@ use salvo::{
     Request, Response, Writer,
 };
 use std::{
-    fs::create_dir_all,
     path::{Path, PathBuf},
 };
 use uuid::Uuid;

@@ -28,7 +28,6 @@ use crate::{
 };
 use salvo::prelude::{CatchPanic, Logger, OpenApi, Router, SwaggerUi};
 
-use super::router;
 
 pub fn api() -> Router {
     let mut no_auth_router = vec![

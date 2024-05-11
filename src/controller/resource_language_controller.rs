@@ -4,18 +4,16 @@ use crate::{
     services::resource_language_service,
     utils::{
         app_error::AppError,
-        app_writer::{AppWriter, ErrorResponseBuilder},
+        app_writer::{AppWriter},
         redis_utils::*,
     },
 };
 use salvo::{
-    http::{cookie::Cookie, ParseError, StatusCode},
     oapi::{
         endpoint,
-        extract::{JsonBody, PathParam},
+        extract::{PathParam},
     },
-    prelude::Json,
-    Depot, Request, Response, Writer,
+    Depot, Writer,
 };
 
 #[endpoint(tags("获取开发语言列表"))]

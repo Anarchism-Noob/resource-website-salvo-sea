@@ -13,20 +13,18 @@ use crate::{
         app_error::AppError,
         app_writer::{AppResult, AppWriter, ErrorResponseBuilder},
         captcha_utils::{generate_captcha, varify_captcha, CaptchaImage},
-        redis_utils::get_redis_pool,
     },
 };
 use salvo::{
-    http::{cookie::Cookie, ParseError, StatusCode},
+    http::{cookie::Cookie, StatusCode},
     oapi::{
         endpoint,
-        extract::{JsonBody, PathParam},
+        extract::{JsonBody},
     },
     prelude::Json,
     Depot, Request, Response, Writer,
 };
 use std::{
-    fs::create_dir_all,
     path::{Path, PathBuf},
 };
 use uuid::Uuid;

@@ -3,12 +3,11 @@ use crate::{
     dtos::sys_carousel_dto::{CreateCarouselRequest, QueryCarouselResponse},
     entities::{
         prelude::{SysCarousel, SysImage, SysUser},
-        sys_carousel, sys_image, sys_user,
+        sys_carousel, sys_image,
     },
     utils::{db::DB, redis_utils::*},
 };
 use sea_orm::*;
-use serde_json;
 use uuid::Uuid;
 
 pub async fn create_carouwsel(form_data: CreateCarouselRequest, uuid: String) -> AppResult<()> {
@@ -55,9 +54,9 @@ pub async fn get_carousel() -> AppResult<Vec<QueryCarouselResponse>> {
     for item in res {
         let image_uuid = item.image_uuid;
         let image_query = SysImage::find_by_id(&image_uuid).one(db).await?;
-        let mut image_model = image_query.unwrap();
+        let image_model = image_query.unwrap();
 
-        let mut res_item = QueryCarouselResponse {
+        let res_item = QueryCarouselResponse {
             id: item.id,
             image_uuid: image_model.image_uuid,
             carousel_url: image_model.image_path,

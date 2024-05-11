@@ -2,10 +2,9 @@ use crate::{
     app_writer::AppResult,
     dtos::sys_website_dto::{WebSiteProfileResponse, WebSiteProfileUpdateRequest},
     entities::{
-        prelude::{SysUser, SysWebsiteInfo},
-        sys_user, sys_website_info,
+        prelude::{SysUser, SysWebsiteInfo}, sys_website_info,
     },
-    utils::{db::DB, rand_utils},
+    utils::{db::DB},
 };
 use sea_orm::*;
 
