@@ -25,7 +25,7 @@ cert:
   key: "config/certs/key.pem"
 
 log:
-  filter_level: "info" # Available options: "debug", "info", "warn", "error"
+  filter_level: "debug" # Available options: "debug", "info", "warn", "error"
   with_ansi: true
   to_stdout: true
   directory: "./logs"

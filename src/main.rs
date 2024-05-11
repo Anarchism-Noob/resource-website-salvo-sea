@@ -26,16 +26,17 @@ mod utils;
 async fn main() {
     get_redis_connection().await;
     init_db_conn().await;
-    super_admin_init().await;
+
     //At the same time, logs are only output to the terminal or file
     let _guard = clia_tracing_config::build()
-        .filter_level(&CFG.log.filter_level)
+        .filter_level("debug")
         .with_ansi(CFG.log.with_ansi)
         .to_stdout(CFG.log.to_stdout)
         .directory(&CFG.log.directory)
         .file_name(&CFG.log.file_name)
         .rolling(&CFG.log.rolling)
         .init();
+    super_admin_init().await;
     tracing::info!("log level: {}", &CFG.log.filter_level);
     //
     // init_db_conn().await;

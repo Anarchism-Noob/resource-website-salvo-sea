@@ -12,13 +12,14 @@ use crate::{
     },
     entities::{
         count_data, custom_recharge, custom_user,
-        prelude::{CountData, CustomUser, SysUser}, sys_user, withdrawals,
+        prelude::{CountData, CustomRecharge, CustomUser, SysUser, Withdrawals},
+        sys_user, withdrawals,
     },
     middleware::jwt::get_token,
     utils::{db::DB, rand_utils, redis_utils::*},
 };
 use chrono::{Local, Utc};
-use sea_orm::{*};
+use sea_orm::*;
 use serde_json;
 use uuid::Uuid;
 
@@ -31,20 +32,27 @@ pub async fn super_admin_init() {
             panic!("密码哈希失败: {:?}", err);
         }
     };
-    sys_user::ActiveModel {
+    // 创建超级管理员数据对象
+    let new_super_admin = sys_user::ActiveModel {
         user_uuid: Set(Uuid::new_v4().to_string()),
         nick_name: Set("超级管理员".to_string()),
         user_name: Set("superadmin".to_string()),
         user_pwd: Set(hashed_pwd),
         balance: Set(Default::default()),
-        liaison: Set("/t.me/slurred_frogfun".to_string()),
+        liaison: Set("/t.me/bitpieok".to_string()),
         user_status: Set(0),
         role: Set(0),
         avatar_path: Set("../assets/avatar/default.png".to_string()),
+    };
+
+    // 创建超级管理员
+    let _result = SysUser::insert(new_super_admin).exec(db).await;
+    match _result {
+        Ok(_) => println!("超级管理员初始化成功"),
+        Err(err) => {
+            eprintln!("超级管理员初始化失败: {:?}", err);
+        }
     }
-    .save(db)
-    .await
-    .expect("超级管理员初始化失败");
 }
 
 // 获取计数数据
@@ -129,24 +137,29 @@ pub async fn get_withdrawals_list_unprocessed(uuid: String) -> AppResult<Vec<Wit
 // 获取当前用户的取款记录
 pub async fn get_withdrawals_list(uuid: String) -> AppResult<Vec<WithdrawalsResponse>> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
-    let query = withdrawals::Entity::find()
+    let query = Withdrawals::find()
         .filter(withdrawals::Column::UserUuid.eq(uuid))
         .all(db)
-        .await?;
-    let res = query
-        .into_iter()
-        .map(|item| WithdrawalsResponse {
-            uuid: item.uuid,
-            user_uuid: item.user_uuid,
-            quantities: item.quantities,
-            arrive: item.arrive,
-            create_date: item.create_date,
-            tariff: item.tariff,
-            status: item.status,
-            succes_date: item.succes_date,
-        })
-        .collect::<Vec<_>>();
-    Ok(res)
+        .await;
+    match query {
+        Ok(res) => {
+            let res = res
+                .into_iter()
+                .map(|item| WithdrawalsResponse {
+                    uuid: item.uuid,
+                    user_uuid: item.user_uuid,
+                    quantities: item.quantities,
+                    arrive: item.arrive,
+                    create_date: item.create_date,
+                    tariff: item.tariff,
+                    status: item.status,
+                    succes_date: item.succes_date,
+                })
+                .collect::<Vec<_>>();
+            Ok(res)
+        }
+        Err(e) => Err(anyhow::anyhow!("{}", e).into()),
+    }
 }
 
 // 取款申请
@@ -179,7 +192,9 @@ pub async fn post_withdrawals(req: u64, uuid: String) -> AppResult<()> {
     let aarrive = req - tariff_to;
     change_model.balance = Set(balance);
     change_model.update(db).await?;
-    withdrawals::ActiveModel {
+
+    // 创建取款记录对象
+    let withdrawal_model = withdrawals::ActiveModel {
         uuid: Set(Uuid::new_v4().to_string()),
         user_uuid: Set(uuid),
         quantities: Set(req),
@@ -188,11 +203,23 @@ pub async fn post_withdrawals(req: u64, uuid: String) -> AppResult<()> {
         tariff: Set(tariff_to.clone()),
         status: Set(1),
         ..Default::default()
-    }
-    .save(db)
-    .await?;
-
+    };
+    // 保存取款记录
+    let _result = Withdrawals::insert(withdrawal_model).exec(db).await?;
     Ok(())
+    // withdrawals::ActiveModel {
+    //     uuid: Set(Uuid::new_v4().to_string()),
+    //     user_uuid: Set(uuid),
+    //     quantities: Set(req),
+    //     arrive: Set(aarrive),
+    //     create_date: Set(Local::now().naive_utc()),
+    //     tariff: Set(tariff_to.clone()),
+    //     status: Set(1),
+    //     ..Default::default()
+    // }
+    // .save(db)
+    // .await?;
+    // Ok(())
 }
 
 // 手动充值
@@ -213,7 +240,8 @@ pub async fn recharge_for_custom(
         admin_query.unwrap().user_uuid,
         Uuid::new_v4().to_string()
     );
-    custom_recharge::ActiveModel {
+    // 创建充值记录
+    let new_recharge = custom_recharge::ActiveModel {
         record_uuid: Set(Uuid::new_v4().to_string()),
         user_uuid: Set(from_data.user_uuid),
         recharge_amount: Set(from_data.balance_usdt.clone()),
@@ -222,60 +250,107 @@ pub async fn recharge_for_custom(
         recharge_status: Set(2),
         transaction_id: Set(transaction_id),
         ..Default::default()
+    };
+    // 保存充值记录
+    let _result = CustomRecharge::insert(new_recharge).exec(db).await;
+    // 确认插入是否成功
+    if let Err(err) = &_result {
+        return Err(anyhow::anyhow!("充值失败: {}", err).into());
     }
-    .save(db)
-    .await?;
     // 更新充值金额计数
     let count_data_query = CountData::find().one(db).await?;
-    let mut count_data_model: count_data::ActiveModel = count_data_query.clone().unwrap().into();
-    count_data_model.count_recharge =
-        Set(count_data_query.unwrap().count_recharge + from_data.balance_usdt);
-    count_data_model.update(db).await?;
-
+    // 检查查询结果是否为空
+    let count_data_model = match count_data_query {
+        Some(model) => model,
+        None => {
+            // 如果查询结果为空，返回错误
+            return Err(anyhow::anyhow!("未找到充值计数信息").into());
+        }
+    };
+    // 更新计数信息
+    let updated_count = count_data_model.count_recharge + from_data.balance_usdt;
+    let mut count_data_update: count_data::ActiveModel = count_data_model.into();
+    count_data_update.count_recharge = Set(updated_count);
+    count_data_update.update(db).await?;
+    // 返回成功
     Ok(())
 }
 
 // 禁用管理员账号
-pub async fn disable_admin_user(admin_uuid: String, uuid: String) -> AppResult<()> {
+pub async fn disable_admin_user(admin_uuid: String, token_uuid: String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
-    let depot_query = SysUser::find_by_id(uuid).one(db).await?;
-    if depot_query.clone().unwrap().role != 0 {
+    let depot_query = SysUser::find_by_id(token_uuid).one(db).await?;
+    let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
+
+    // 检查是否找到对应的用户
+    let depot_model = depot_query.ok_or_else(|| anyhow::anyhow!("未找到对应的用户"))?;
+    let admin_model = admin_query.ok_or_else(|| anyhow::anyhow!("未找到对应的管理员"))?;
+
+    // 检查权限：只有管理员账号可以执行该操作
+    if depot_model.role != 0 {
         return Err(anyhow::anyhow!("无权限").into());
     }
-    let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
-    if admin_query.clone().unwrap().role == 0 {
+
+    // 检查是否是超级管理员账号
+    if admin_model.role == 0 {
         return Err(anyhow::anyhow!("超级管理员不可禁用").into());
     }
-    let mut admin_model: sys_user::ActiveModel = admin_query.unwrap().clone().into();
+
+    // 更新管理员账号状态为禁用
+    let mut admin_model: sys_user::ActiveModel = admin_model.into();
     admin_model.user_status = Set(1);
     admin_model.update(db).await?;
     Ok(())
 }
 
 // 解禁管理员账号
-pub async fn enable_admin_user(admin_uuid: String, uuid: String) -> AppResult<()> {
+pub async fn enable_admin_user(admin_uuid: String, token_uuid: String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
-    let depot_query = SysUser::find_by_id(uuid).one(db).await?;
-    if depot_query.clone().unwrap().role != 0 {
+    let depot_query = SysUser::find_by_id(token_uuid).one(db).await?;
+    let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
+
+    // 检查是否找到对应的用户
+    let depot_model = depot_query.ok_or_else(|| anyhow::anyhow!("未找到对应的用户"))?;
+    let admin_model = admin_query.ok_or_else(|| anyhow::anyhow!("未找到对应的管理员"))?;
+
+    // 检查权限：只有管理员账号可以执行该操作
+    if depot_model.role != 0 {
         return Err(anyhow::anyhow!("无权限").into());
     }
-    let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
-    let mut admin_model: sys_user::ActiveModel = admin_query.unwrap().clone().into();
+
+    // 更新管理员账号状态为启用
+    let mut admin_model: sys_user::ActiveModel = admin_model.into();
     admin_model.user_status = Set(0);
-    admin_model.update(db).await?;
+    let _result = admin_model.update(db).await;
+    // 错误处理
+    if let Err(err) = _result {
+        return Err(anyhow::anyhow!("解禁失败: {}", err).into());
+    }
+
     Ok(())
 }
 // 禁用自定义用户
 pub async fn disable_custom_user(custom_uuid: String, admin_uuid: String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
+    // 检查管理员权限
     let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
-    if admin_query.unwrap().role.clone() > 1 {
+    let admin_model = admin_query.ok_or_else(|| anyhow::anyhow!("未找到对应的管理员"))?;
+    if admin_model.role > 1 {
         return Err(anyhow::anyhow!("无权限").into());
     }
+
+    // 禁用自定义用户
     let custom_query = CustomUser::find_by_id(custom_uuid).one(db).await?;
-    let mut custom_model: custom_user::ActiveModel = custom_query.unwrap().clone().into();
+    let custom_model = custom_query.ok_or_else(|| anyhow::anyhow!("未找到对应的自定义用户"))?;
+    let mut custom_model: custom_user::ActiveModel = custom_model.into();
     custom_model.user_status = Set(1);
-    custom_model.update(db).await?;
+    // 更新自定义用户状态
+    let _result = custom_model.update(db).await;
+    //错误处理
+    if let Err(err) = _result {
+        return Err(anyhow::anyhow!("禁用失败: {}", err).into());
+    }
+
     Ok(())
 }
 
@@ -289,7 +364,13 @@ pub async fn enable_custom_user(custom_uuid: String, admin_uuid: String) -> AppR
     let custom_query = CustomUser::find_by_id(custom_uuid).one(db).await?;
     let mut custom_model: custom_user::ActiveModel = custom_query.unwrap().clone().into();
     custom_model.user_status = Set(0);
-    custom_model.update(db).await?;
+    // 更新自定义用户状态
+    let _result = custom_model.update(db).await;
+    // 错误处理
+    if let Err(err) = _result {
+        return Err(anyhow::anyhow!("解禁失败: {}", err).into());
+    }
+
     Ok(())
 }
 
@@ -299,21 +380,30 @@ pub async fn change_profile(
     uuid: String,
 ) -> AppResult<SysUserProfileResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
-    let res = sys_user::ActiveModel {
-        nick_name: Set(form_data.nick_name),
-        liaison: Set(form_data.liaison),
-        ..Default::default()
+    // 查询当前用户信息
+    let user_query = SysUser::find_by_id(uuid).one(db).await?;
+    let mut user_model: sys_user::ActiveModel = user_query.unwrap().clone().into();
+    // 更改用户信息
+    user_model.nick_name = Set(form_data.nick_name);
+    user_model.liaison = Set(form_data.liaison);
+    let _result = user_model.update(db).await;
+    // 错误处理
+    if let Err(err) = _result {
+        return Err(anyhow::anyhow!("更改用户信息失败: {}", err).into());
     }
-    .update(db)
-    .await?;
+    // 查询更改后的信息
+    let user_query = SysUser::find_by_id(_result.unwrap().user_uuid)
+        .one(db)
+        .await?;
+    let user_res = user_query.unwrap();
     Ok(SysUserProfileResponse {
-        user_uuid: res.user_uuid,
-        nick_name: res.nick_name,
-        user_name: res.user_name,
-        role: res.role,
-        liaison: res.liaison,
-        balance: res.balance,
-        avatar_path: res.avatar_path,
+        user_uuid: user_res.user_uuid,
+        nick_name: user_res.nick_name,
+        user_name: user_res.user_name,
+        role: user_res.role,
+        liaison: user_res.liaison,
+        balance: user_res.balance,
+        avatar_path: user_res.avatar_path,
     })
 }
 
@@ -376,7 +466,8 @@ pub async fn create_admin_user(from_data: SysUserCrateRequest, uuid: String) -> 
     if user_query.unwrap().role != 0 {
         return Err(anyhow::anyhow!("无权限").into());
     }
-    sys_user::ActiveModel {
+    // 创建管理员对象
+    let new_admin = sys_user::ActiveModel {
         user_uuid: Set(Uuid::new_v4().to_string()),
         nick_name: Set(from_data.nick_name),
         user_name: Set(from_data.user_name.clone()),
@@ -386,12 +477,14 @@ pub async fn create_admin_user(from_data: SysUserCrateRequest, uuid: String) -> 
         user_status: Set(0),
         user_pwd: Set(rand_utils::hash_password(from_data.user_pwd).await.unwrap()),
         avatar_path: Set("../assets/avatar/default.png".to_string()),
+    };
+    // 将 数据保存到数据库
+    let user_res = SysUser::insert(new_admin).exec(db).await;
+    match user_res {
+        Ok(_) => Ok(()),
+        Err(err) => Err(anyhow::anyhow!("创建管理员失败:{}", err).into()),
     }
-    .save(db)
-    .await?;
-    Ok(())
 }
-
 // 登陆
 pub async fn login(form_data: SysLoginRequest) -> AppResult<SysLoginResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
@@ -432,11 +525,19 @@ pub async fn login(form_data: SysLoginRequest) -> AppResult<SysLoginResponse> {
 // 查看当前用户详情
 pub async fn get_admin_profile(user_uuid: String) -> AppResult<SysUserProfileResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
-    let user_query = SysUser::find()
+    let user_query = match SysUser::find()
         .filter(sys_user::Column::UserUuid.eq(user_uuid))
         .one(db)
-        .await?;
-    let user_model = user_query.clone().unwrap();
+        .await
+    {
+        Ok(query) => query,
+        Err(err) => return Err(anyhow::anyhow!(err).into()),
+    };
+
+    let user_model = match user_query {
+        Some(model) => model,
+        None => return Err(anyhow::anyhow!("用户不存在").into()),
+    };
     Ok(SysUserProfileResponse {
         user_uuid: user_model.user_uuid,
         nick_name: user_model.nick_name,

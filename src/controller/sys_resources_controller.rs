@@ -1,19 +1,15 @@
 use crate::{
     app_writer::{AppWriter, ErrorResponseBuilder},
-    dtos::{
-        sys_resources_dto::{
-            PaginationParams, SysResourceChangeLink, SysResourceCreateRequest, SysResourceList,
-            SysResourceResponse,
-        },
+    dtos::sys_resources_dto::{
+        PaginationParams, SysResourceChangeLink, SysResourceCreateRequest, SysResourceList,
+        SysResourceResponse,
     },
     middleware::jwt,
     services::sys_resource_service,
-    utils::{
-        app_error::AppError,
-    },
+    utils::app_error::AppError,
 };
 use salvo::{
-    http::{StatusCode},
+    http::StatusCode,
     oapi::{
         endpoint,
         extract::{JsonBody, PathParam},
@@ -21,9 +17,7 @@ use salvo::{
     prelude::Json,
     Depot, Request, Response, Writer,
 };
-use std::{
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
 #[endpoint(tags("删除页面截图"))]
@@ -175,11 +169,7 @@ pub async fn put_upload_description(req: &mut Request, res: &mut Response) {
             }
 
             // 构建新的文件名（保留原始文件的扩展名）
-            dest.push(format!(
-                "{}.{}",
-                file_name,
-                extension
-            ));
+            dest.push(format!("{}.{}", file_name, extension));
 
             // 保存文件
             let info = if let Err(e) = std::fs::copy(&file.path(), &dest) {
@@ -231,7 +221,11 @@ pub async fn put_upload_image(req: &mut Request, res: &mut Response) {
                 }
             }
         }
-        sys_resource_service::save_resource_image(msgs.clone());
+        let _resulr = sys_resource_service::save_resource_image(msgs.clone());
+        if let Err(e) = _resulr.await {
+            res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
+            res.render(Json(format!("file not found in request: {}", e)));
+        };
         res.render(Json(&msgs));
     } else {
         res.status_code(StatusCode::BAD_REQUEST);
