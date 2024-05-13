@@ -11,8 +11,7 @@ pub fn router() -> Router {
     router
 }
 
-pub fn router_whitelist() -> Vec<String> {
-    let router_whitelist = vec![];
-
-    router_whitelist
-}
+// pub fn router_whitelist() -> Vec<String> {
+//     let router_whitelist = vec![];
+//     router_whitelist
+// }
