@@ -4,11 +4,11 @@ use crate::{
     services::sys_carousel_service,
     utils::{
         app_error::AppError,
-        app_writer::{AppWriter},
+        app_writer::{AppWriter, ErrorResponseBuilder},
     },
 };
 use salvo::{
-    http::{StatusCode},
+    http::StatusCode,
     oapi::{
         endpoint,
         extract::{JsonBody, PathParam},
@@ -16,9 +16,7 @@ use salvo::{
     prelude::Json,
     Depot, Request, Response, Writer,
 };
-use std::{
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
 #[endpoint(tags("删除轮播图"))]
@@ -44,18 +42,27 @@ pub async fn get_carousel() -> AppWriter<Vec<QueryCarouselResponse>> {
 pub async fn put_create_carousel(
     form_data: JsonBody<CreateCarouselRequest>,
     depot: &mut Depot,
-) -> AppWriter<()> {
+    res: &mut Response,
+) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(&token) {
-        return AppError::AnyHow(err).into();
+        return ErrorResponseBuilder::with_err(AppError::AnyHow(err).into()).into_response(res);
     }
 
     let jwt_model = jwt::parse_token(&token).unwrap();
     let uuid = jwt_model.user_id;
     let _form_data = form_data.0;
     let _result = sys_carousel_service::create_carouwsel(_form_data, uuid).await;
-    AppWriter(_result)
+    match _result {
+        Ok(_) => {
+            res.status_code(StatusCode::OK);
+        }
+        Err(err) => {
+            res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
+            return ErrorResponseBuilder::with_err(err).into_response(res);
+        }
+    }
 }
 
 #[endpoint(tags("上传轮播图"))]
@@ -93,7 +100,17 @@ pub async fn post_upload_carousel(req: &mut Request, res: &mut Response) {
                 file_name,
             )
             .await;
-            res.render(Json(info));
+            match _result {
+                Ok(_) => {
+                    res.status_code(StatusCode::OK);
+                    res.render(Json(info));
+                }
+                Err(e) => {
+                    res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
+                    res.render(Json(e.to_string()));
+                }
+            }
+            // res.render(Json(info));
         }
     } else {
         res.status_code(StatusCode::BAD_REQUEST);

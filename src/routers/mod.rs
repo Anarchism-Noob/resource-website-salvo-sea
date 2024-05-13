@@ -6,7 +6,7 @@ use salvo::prelude::Router;
 pub fn router() -> Router {
     let router = Router::new()
         .push(Router::with_path("/custom/api/").push(custom::api()))
-        .push(Router::with_path("/admin/api").push(admin::api()));
+        .push(Router::with_path("/system/api").push(admin::api()));
 
     router
 }

@@ -25,32 +25,48 @@ use uuid::Uuid;
 
 pub async fn super_admin_init() {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
-    let user_pwd = "waqu2024".to_string();
-    let hashed_pwd = match rand_utils::hash_password(user_pwd).await {
-        Ok(pwd) => pwd,
-        Err(err) => {
-            panic!("密码哈希失败: {:?}", err);
+    // 查看是否已经初始化过
+    let data_query = SysUser::find()
+        .filter(sys_user::Column::UserName.eq("superadmin"))
+        .one(db)
+        .await;
+    match data_query {
+        Ok(Some(model)) => {
+            println!("超级管理员已初始化");
+            return;
         }
-    };
-    // 创建超级管理员数据对象
-    let new_super_admin = sys_user::ActiveModel {
-        user_uuid: Set(Uuid::new_v4().to_string()),
-        nick_name: Set("超级管理员".to_string()),
-        user_name: Set("superadmin".to_string()),
-        user_pwd: Set(hashed_pwd),
-        balance: Set(Default::default()),
-        liaison: Set("/t.me/bitpieok".to_string()),
-        user_status: Set(0),
-        role: Set(0),
-        avatar_path: Set("../assets/avatar/default.png".to_string()),
-    };
+        Ok(None) => {
+            let user_pwd = "waqu2024".to_string();
+            let hashed_pwd = match rand_utils::hash_password(user_pwd).await {
+                Ok(pwd) => pwd,
+                Err(err) => {
+                    panic!("密码哈希失败: {:?}", err);
+                }
+            };
+            // 创建超级管理员数据对象
+            let new_super_admin = sys_user::ActiveModel {
+                user_uuid: Set(Uuid::new_v4().to_string()),
+                nick_name: Set("超级管理员".to_string()),
+                user_name: Set("superadmin".to_string()),
+                user_pwd: Set(hashed_pwd),
+                balance: Set(Default::default()),
+                liaison: Set("/t.me/bitpieok".to_string()),
+                user_status: Set(0),
+                role: Set(0),
+                avatar_path: Set("../assets/avatar/default.png".to_string()),
+            };
 
-    // 创建超级管理员
-    let _result = SysUser::insert(new_super_admin).exec(db).await;
-    match _result {
-        Ok(_) => println!("超级管理员初始化成功"),
+            // 创建超级管理员
+            let _result = SysUser::insert(new_super_admin).exec(db).await;
+            match _result {
+                Ok(_) => println!("超级管理员初始化成功"),
+                Err(err) => {
+                    eprintln!("超级管理员初始化失败: {:?}", err);
+                }
+            }
+        }
         Err(err) => {
-            eprintln!("超级管理员初始化失败: {:?}", err);
+            println!("数据库查询失败: {:?}", err)
         }
     }
 }

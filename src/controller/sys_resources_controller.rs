@@ -1,7 +1,7 @@
 use crate::{
     app_writer::{AppWriter, ErrorResponseBuilder},
     dtos::sys_resources_dto::{
-        PaginationParams, SysResourceChangeLink, SysResourceCreateRequest, SysResourceList,
+        SysResourceChangeLink, SysResourceCreateRequest, SysResourceList,
         SysResourceResponse,
     },
     middleware::jwt,
@@ -39,7 +39,8 @@ pub async fn get_resource_detail_by_uuid(
     req: &mut Request,
     depot: &mut Depot,
 ) -> AppWriter<SysResourceResponse> {
-    let resource_uuid = req.param("resource_uuid").unwrap();
+    // 从url获取uuid
+    let resource_uuid = req.query::<String>("resource").unwrap();
 
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
@@ -56,13 +57,16 @@ pub async fn get_resource_detail_by_uuid(
 
 #[endpoint(tags("根据类型和语言获取资源列表"))]
 pub async fn get_resources_of_category_and_language(
-    path_param: JsonBody<PaginationParams>,
+    req: &mut Request,
 ) -> AppWriter<Vec<SysResourceList>> {
-    let page_query = path_param.0;
-    let page = page_query.page.unwrap_or(1);
-    let page_size = page_query.page_size.unwrap_or(49);
-    let category = page_query.category.unwrap();
-    let language = page_query.language.unwrap();
+    // 从url中获取language和category
+    let language = req.query::<String>("language").unwrap();
+    let category = req.query::<String>("category").unwrap();
+
+    // 从请求中获取分页参数
+    let page = req.query::<u64>("page").unwrap_or(1);
+    let page_size = req.query::<u64>("page_size").unwrap_or(49);
+    // 调用service处理
     match sys_resource_service::get_resources_by_category_and_language(
         category, language, page, page_size,
     )
@@ -75,12 +79,15 @@ pub async fn get_resources_of_category_and_language(
 
 #[endpoint(tags("根据类型获取资源列表"))]
 pub async fn get_resources_of_category(
-    path_param: JsonBody<PaginationParams>,
+    req: &mut Request,
 ) -> AppWriter<Vec<SysResourceList>> {
-    let page_query = path_param.0;
-    let page = page_query.page.unwrap_or(1);
-    let page_size = page_query.page_size.unwrap_or(49);
-    let category = page_query.category.unwrap();
+    // 从url中获取category
+    let category = req.query::<String>("category").unwrap();
+
+    // 从请求中获取分页参数
+    let page = req.query::<u64>("page").unwrap_or(1);
+    let page_size = req.query::<u64>("page_size").unwrap_or(49);
+    // 调用service处理
     match sys_resource_service::get_resources_of_category(category, page, page_size).await {
         Ok(result) => AppWriter(Ok(result)),
         Err(err) => AppWriter(Err(err.into())),
@@ -89,12 +96,15 @@ pub async fn get_resources_of_category(
 
 #[endpoint(tags("根据语言获取资源列表"))]
 pub async fn get_resource_list_of_language(
-    page_query: JsonBody<PaginationParams>,
+    req: &mut Request,
 ) -> AppWriter<Vec<SysResourceList>> {
-    let page_query = page_query.0;
-    let page = page_query.page.unwrap_or(1);
-    let page_size = page_query.page_size.unwrap_or(49);
-    let language = page_query.language.unwrap();
+    // 从url中获取language和category
+    let language = req.query::<String>("language").unwrap();
+
+    // 从请求中获取分页参数
+    let page = req.query::<u64>("page").unwrap_or(1);
+    let page_size = req.query::<u64>("page_size").unwrap_or(49);
+    // 调用service处理
     match sys_resource_service::get_resours_of_language(language, page, page_size).await {
         Ok(result) => AppWriter(Ok(result)),
         Err(err) => AppWriter(Err(err.into())),
@@ -103,11 +113,12 @@ pub async fn get_resource_list_of_language(
 
 #[endpoint(tags("获取资源列表"))]
 pub async fn get_resource_list(
-    page_query: JsonBody<PaginationParams>,
+    req: &mut Request,
 ) -> AppWriter<Vec<SysResourceList>> {
-    let page_query = page_query.0;
-    let page = page_query.page.unwrap_or(1);
-    let page_size = page_query.page_size.unwrap_or(49);
+    // 从请求中获取分页参数
+    let page = req.query::<u64>("page").unwrap_or(1);
+    let page_size = req.query::<u64>("page_size").unwrap_or(49);
+    // 调用service处理
     match sys_resource_service::get_resource_list(page, page_size).await {
         Ok(result) => AppWriter(Ok(result)),
         Err(err) => AppWriter(Err(err.into())),

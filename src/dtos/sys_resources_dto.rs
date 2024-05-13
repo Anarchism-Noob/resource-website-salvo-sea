@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use salvo::prelude::{ToSchema};
+use salvo::prelude::ToSchema;
 use sea_orm::prelude::Decimal;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -24,15 +24,15 @@ pub struct SysResourceList {
     pub resource_image: String,
 }
 
-#[derive(Debug, Clone, Deserialize, ToSchema, Default)]
-#[salvo(schema(rename_all = "camelCase"))]
-#[serde(rename_all = "camelCase")]
-pub struct PaginationParams {
-    pub page: Option<u64>,
-    pub page_size: Option<u64>,
-    pub category: Option<String>,
-    pub language: Option<String>,
-}
+// #[derive(Debug, Clone, Deserialize, ToSchema, Default)]
+// #[salvo(schema(rename_all = "camelCase"))]
+// #[serde(rename_all = "camelCase")]
+// pub struct PaginationParams {
+//     pub page: Option<u64>,
+//     pub page_size: Option<u64>,
+//     pub category: Option<String>,
+//     pub language: Option<String>,
+// }
 
 #[derive(Serialize, Deserialize, Debug, Validate, ToSchema, Default)]
 #[salvo(schema(rename_all = "camelCase"))]
