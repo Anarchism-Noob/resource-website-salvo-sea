@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
 #[endpoint(tags("删除轮播图"))]
-pub async fn delete_carousel(img: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn delete_carousel(img_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -28,7 +28,8 @@ pub async fn delete_carousel(img: PathParam<String>, depot: &mut Depot) -> AppWr
     }
     let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
-    let _result = sys_carousel_service::delete_carousel(img.0, uuid).await;
+    let image = img_uuid.0;
+    let _result = sys_carousel_service::delete_carousel(image, uuid).await;
     AppWriter(_result)
 }
 

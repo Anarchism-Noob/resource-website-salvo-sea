@@ -41,7 +41,7 @@ pub async fn get_all_category() -> AppResult<Vec<QueryCategoryResponse>> {
     Ok(category_res)
 }
 
-pub async fn delete_category(id: i32, uuid:String) -> AppResult<()> {
+pub async fn delete_category(id: i32, uuid: String) -> AppResult<()> {
     let db = DB.get().ok_or(anyhow::anyhow!("数据库连接失败"))?;
     let user_query = SysUser::find_by_id(uuid).one(db).await?;
     if user_query.is_none() {

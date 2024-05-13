@@ -34,7 +34,7 @@ pub async fn create_category(req: PathParam<String>, depot: &mut Depot) -> AppWr
 }
 
 #[endpoint(tags("删除资源分类"))]
-pub async fn delete_category(req: PathParam<i32>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn delete_category(req: PathParam<u32>, depot: &mut Depot) -> AppWriter<()> {
     // 获取token
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用
@@ -46,7 +46,8 @@ pub async fn delete_category(req: PathParam<i32>, depot: &mut Depot) -> AppWrite
 
     // 获取用户id
     let user_id = jwt_model.user_id;
+    let category = req.0.try_into().unwrap();
 
-    let _result = resource_category_service::delete_category(req.0, user_id).await;
+    let _result = resource_category_service::delete_category(category, user_id).await;
     AppWriter(_result)
 }

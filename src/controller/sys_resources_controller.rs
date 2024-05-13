@@ -108,6 +108,8 @@ pub async fn get_resource_list_of_language(req: &mut Request) -> AppWriter<Vec<S
 
 #[endpoint(tags("获取资源列表"))]
 pub async fn get_resource_list(req: &mut Request) -> AppWriter<Vec<SysResourceList>> {
+    // 从请求中获取查询条件
+    let query = req.query::<String>("all").unwrap_or("".to_string());
     // 从请求中获取分页参数
     let page = req.query::<u64>("page").unwrap_or(1);
     let page_size = req.query::<u64>("page_size").unwrap_or(49);

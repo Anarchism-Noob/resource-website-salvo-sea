@@ -9,41 +9,45 @@ use crate::{
             get_resource_detail_by_uuid, get_resource_list, get_resource_list_of_language,
             get_resources_of_category, get_resources_of_category_and_language,
         },
-        website_controller::{get_website_profile},
+        website_controller::{get_custom_bg, get_website_profile},
     },
-    middleware::{cors::cors_middleware, jwt_auth::{jwt_auth_middleware}},
+    middleware::{cors::cors_middleware, jwt_auth::jwt_auth_middleware},
 };
 use salvo::prelude::{CatchPanic, Logger, OpenApi, Router, SwaggerUi};
 
 pub fn api() -> Router {
     let mut no_auth_router = vec![
-        Router::with_path("/captcha").get(get_captcha),
-        Router::with_path("/website").get(get_website_profile),
+        Router::with_path("captcha").get(get_captcha),
+        Router::with_path("website").get(get_website_profile),
         // 用户登陆
-        Router::with_path("/login").post(post_login),
+        Router::with_path("login")
+            .post(post_login)
+            .push(Router::with_path("login_bg").get(get_custom_bg)),
         // 用户注册
-        Router::with_path("/register").post(post_register),
+        Router::with_path("register").post(post_register),
         // 首页
-        Router::with_path("/index")
-        .get(get_resource_list)
-        .get(get_carousel)
-        .push(Router::with_path("/<language>").get(get_resource_list_of_language))
-        .push(Router::with_path("/<category>").get(get_resources_of_category))
-        .push(Router::with_path("/<language>/<category>").get(get_resources_of_category_and_language))
-        .push(Router::with_path("/<uuid>").get(get_resource_detail_by_uuid)),
+        Router::with_path("index")
+            .push(Router::with_path("/all").get(get_resource_list))
+            .push(Router::with_path("carousel").get(get_carousel))
+            .push(Router::with_path("<language>").get(get_resource_list_of_language))
+            .push(Router::with_path("<category>").get(get_resources_of_category))
+            .push(
+                Router::with_path("<language>/<category>")
+                    .get(get_resources_of_category_and_language),
+            )
+            .push(Router::with_path("<uuid>").get(get_resource_detail_by_uuid)),
     ];
 
     let _cors_handler = cors_middleware();
 
     let mut need_auth_routers = vec![
-        Router::with_path("/orders/<uuid>").get(get_orders),
-        Router::with_path("/resource/<uuid>").put(put_buy_resource),
-        Router::with_path("/Custom/<uuid>")
-        .get(get_user_profile)
-        .put(put_change_password)
-        .put(put_change_profile)
-        .put(put_upload_avatar),
-        
+        Router::with_path("orders/<uuid>").get(get_orders),
+        Router::with_path("resource/<uuid>").put(put_buy_resource),
+        Router::with_path("profile")
+            .push(Router::with_path("<uuid>").get(get_user_profile))
+            .push(Router::with_path("<uuid>").put(put_change_password))
+            .push(Router::with_path("<uuid>").put(put_change_profile))
+            .push(Router::with_path("avatar").put(put_upload_avatar)),
     ];
 
     let router = Router::new()
