@@ -1,5 +1,4 @@
 use salvo::prelude::ToSchema;
-use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 

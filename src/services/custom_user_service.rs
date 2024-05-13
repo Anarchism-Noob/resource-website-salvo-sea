@@ -1,7 +1,7 @@
 use crate::{
     app_writer::AppResult,
     dtos::{
-        custom_orders_dto::{CustomOrderResponse},
+        custom_orders_dto::CustomOrderResponse,
         custom_user_dto::{
             BuyResourcetRequest, ChangePwdRequest, ChangeUserProfileRequest,
             CustomUserLoginRequest, CustomUserLoginResponse, CustomUserProfileResponse,
@@ -16,7 +16,7 @@ use crate::{
     middleware::jwt::get_token,
     utils::{db::DB, rand_utils, redis_utils::*},
 };
-use chrono::{Local};
+use chrono::Local;
 use sea_orm::*;
 use uuid::Uuid;
 
@@ -39,7 +39,7 @@ pub async fn save_avatar(
     })
 }
 
-pub async fn list_orders(user_uuid: String) -> AppResult<Vec<CustomOrderResponse>> {
+pub async fn list_orders(_user_uuid: String) -> AppResult<Vec<CustomOrderResponse>> {
     let redis_pool = get_redis_pool().await;
     let mut redis_client = redis_pool.get().await.unwrap();
     let _data: String = redis_client
@@ -47,10 +47,10 @@ pub async fn list_orders(user_uuid: String) -> AppResult<Vec<CustomOrderResponse
         .await
         .unwrap_or("".to_string());
     let mut _result: Vec<CustomOrderResponse> = Vec::new();
-    if _data.len() > 0 {
+    if !_data.is_empty() {
         _result = serde_json::from_str::<Vec<CustomOrderResponse>>(&_data).unwrap_or_default();
     }
-    if _result.len() > 0 {
+    if !_result.is_empty() {
         return Ok(_result);
     }
 
@@ -140,7 +140,7 @@ pub async fn buy_resource_request(
         .all(db)
         .await
         .unwrap();
-    if order_result.len() > 0 {
+    if !order_result.is_empty() {
         return Err(anyhow::anyhow!("资源已购买").into());
     }
     // 查询资源信息
@@ -187,7 +187,7 @@ pub async fn buy_resource_request(
         .filter(sys_user::Column::UserName.eq(req.create_user_name))
         .one(db)
         .await?;
-    let admin_balance = admin_user.clone().unwrap().balance + resource_model.resource_price.clone();
+    let admin_balance = admin_user.clone().unwrap().balance + resource_model.resource_price;
     let mut admin_user_model: sys_user::ActiveModel = admin_user.unwrap().into();
     admin_user_model.balance = Set(admin_balance);
     admin_user_model.update(db).await?;
@@ -241,7 +241,7 @@ pub async fn check_user_name(req: String) -> AppResult<()> {
         .filter(custom_user::Column::UserName.eq(req))
         .one(db)
         .await?;
-    if user_query != None {
+    if user_query.is_some() {
         return Err(anyhow::anyhow!("用户名已存在").into());
     }
     Ok(())

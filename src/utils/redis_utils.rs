@@ -24,6 +24,5 @@ pub async fn get_redis_pool() -> Pool<RedisConnectionManager> {
 }
 
 pub async fn get_redis_connection() -> Pool<RedisConnectionManager> {
-    let pool = get_redis_pool().await;
-    pool
+    get_redis_pool().await
 }

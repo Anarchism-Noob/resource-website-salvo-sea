@@ -17,8 +17,8 @@ use crate::{
             put_withdraw_process,
         },
         website_controller::{
-            get_admin_bg, get_custom_bg, get_website_logo, get_website_profile,
-            update_website_profile, upload_admin_bg, upload_custom_bg, upload_website_logo,
+            get_admin_bg, get_custom_bg, get_website_profile, update_website_profile,
+            upload_admin_bg, upload_custom_bg, upload_website_logo,
         },
     },
     middleware::{cors::cors_middleware, jwt_auth::jwt_auth_middleware},
@@ -26,28 +26,18 @@ use crate::{
 use salvo::prelude::{CatchPanic, Logger, OpenApi, Router, SwaggerUi};
 
 pub fn api() -> Router {
-    
     let _cors_handler = cors_middleware();
-    
+
     let mut no_auth_router = vec![
         Router::with_path("comm")
-        .push(
-            Router::with_path("get_captcha").get(get_captcha),
-        )
-        .push(
-            Router::with_path("get_admin_bg").get(get_admin_bg),
-        )
-        .push(
-            Router::with_path("login").get(post_login),
-        ),
-        Router::with_path("system")
-        .push(
-            Router::with_path("manager")
-            .push(
+            .push(Router::with_path("get_captcha").get(get_captcha))
+            .push(Router::with_path("get_admin_bg").get(get_admin_bg))
+            .push(Router::with_path("login").get(post_login)),
+        Router::with_path("system").push(
+            Router::with_path("manager").push(
                 Router::with_path("website")
-                    .push(
-                        Router::with_path("get_profile").get(get_website_profile)
-                    ),
+                    .push(Router::with_path("get_profile").get(get_website_profile))
+                    .push(Router::with_path("get_custom_bg").get(get_custom_bg)),
             ),
         ),
     ];
@@ -67,6 +57,7 @@ pub fn api() -> Router {
                 .push(
                     // 用户账号管理
                     Router::with_path("custom")
+                        .push(Router::with_path("get_custom_list").get(get_custom_list))
                         .push(Router::with_path("disable_custom").put(disable_custom))
                         .push(Router::with_path("enable_custom").put(enable_custom))
                         .push(Router::with_path("recharge").put(put_recharge)),
@@ -92,7 +83,7 @@ pub fn api() -> Router {
                             // 语言管理
                             Router::with_path("language")
                                 .push(Router::with_path("create").post(post_create_language))
-                                .push(Router::with_path("<id>").delete(delete_category))
+                                .push(Router::with_path("<id>").delete(delete_language))
                                 .push(Router::with_path("get_languages").get(get_dev_languages)),
                         )
                         .push(
@@ -112,11 +103,14 @@ pub fn api() -> Router {
                         .push(Router::with_path("upload_custom_bg").post(upload_custom_bg))
                         .push(
                             // 轮播图
-                            Router::with_path("carousel").push(
-                                Router::with_path("create")
-                                    .post(post_upload_carousel)
-                                    .put(put_create_carousel),
-                            ),
+                            Router::with_path("carousel")
+                                .push(
+                                    Router::with_path("create")
+                                        .post(post_upload_carousel)
+                                        .put(put_create_carousel),
+                                )
+                                .push(Router::with_path("get_carousels").get(get_carousel))
+                                .push(Router::with_path("delete").delete(delete_carousel)),
                         ),
                 ),
         )

@@ -8,17 +8,15 @@ use crate::{
     },
 };
 use salvo::{
-    http::{StatusCode},
+    http::StatusCode,
     oapi::{
         endpoint,
-        extract::{JsonBody},
+        extract::JsonBody,
     },
     prelude::Json,
     Depot, Request, Response, Writer,
 };
-use std::{
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
 #[endpoint(tags("获取管理员登陆页面背景"))]
@@ -34,11 +32,11 @@ pub async fn get_admin_bg() -> AppWriter<String> {
 pub async fn upload_admin_bg(req: &mut Request, depot: &mut Depot, res: &mut Response) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     // 创建一个uploads目录，用于保存上传的文件
@@ -62,7 +60,7 @@ pub async fn upload_admin_bg(req: &mut Request, depot: &mut Depot, res: &mut Res
                 extension.to_str().unwrap_or("png")
             ));
 
-            let info = if let Err(e) = std::fs::copy(&file.path(), &dest) {
+            let info = if let Err(e) = std::fs::copy(file.path(), &dest) {
                 res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
                 format!("file not found in request: {}", e)
             } else {
@@ -92,11 +90,11 @@ pub async fn get_custom_bg() -> AppWriter<String> {
 pub async fn upload_custom_bg(req: &mut Request, depot: &mut Depot, res: &mut Response) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     // 创建一个uploads目录，用于保存上传的文件
@@ -120,7 +118,7 @@ pub async fn upload_custom_bg(req: &mut Request, depot: &mut Depot, res: &mut Re
                 extension.to_str().unwrap_or("png")
             ));
 
-            let info = if let Err(e) = std::fs::copy(&file.path(), &dest) {
+            let info = if let Err(e) = std::fs::copy(file.path(), &dest) {
                 res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
                 format!("file not found in request: {}", e)
             } else {
@@ -151,11 +149,11 @@ pub async fn get_website_logo() -> AppWriter<String> {
 pub async fn upload_website_logo(req: &mut Request, depot: &mut Depot, res: &mut Response) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     // 创建一个uploads目录，用于保存上传的文件
@@ -179,7 +177,7 @@ pub async fn upload_website_logo(req: &mut Request, depot: &mut Depot, res: &mut
                 extension.to_str().unwrap_or("png")
             ));
 
-            let info = if let Err(e) = std::fs::copy(&file.path(), &dest) {
+            let info = if let Err(e) = std::fs::copy(file.path(), &dest) {
                 res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
                 format!("file not found in request: {}", e)
             } else {
@@ -225,11 +223,11 @@ pub async fn update_website_profile(
     // 获取token
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
     // 解析token
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
 
     // 获取用户id
     let user_id = jwt_model.user_id;

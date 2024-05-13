@@ -59,7 +59,7 @@ pub async fn varify_captcha(
     let redis_pool = get_redis_pool().await;
     let  mut redis_conn = redis_pool.get().await.expect("");
     
-    let redis_key = format!("Captcha: : {}  : {}", captcha_type, captcha_uuid.to_string());
+    let redis_key = format!("Captcha: : {}  : {}", captcha_type, captcha_uuid);
     
     let second: i64 = redis_conn
         .ttl(redis_key.clone())

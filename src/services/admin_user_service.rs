@@ -31,9 +31,8 @@ pub async fn super_admin_init() {
         .one(db)
         .await;
     match data_query {
-        Ok(Some(model)) => {
+        Ok(Some(_model)) => {
             println!("超级管理员已初始化");
-            return;
         }
         Ok(None) => {
             let user_pwd = "waqu2024".to_string();
@@ -72,8 +71,12 @@ pub async fn super_admin_init() {
 }
 
 // 获取计数数据
-pub async fn get_history_data(uuid: String) -> AppResult<CountDataResponse> {
+pub async fn get_history_data(_uuid: String) -> AppResult<CountDataResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
+    let admin_query = SysUser::find_by_id(&_uuid).one(db).await?;
+    if admin_query.is_none() {
+        return Err(anyhow::anyhow!("用户不存在").into());
+    }
     let data_query = CountData::find().one(db).await?;
     let data_model = data_query.clone().unwrap();
     // 查询用户数量
@@ -128,8 +131,15 @@ pub async fn post_withdraw_process(withdrawals_uuid: String, uuid: String) -> Ap
 }
 
 // 获取未处理的取款记录
-pub async fn get_withdrawals_list_unprocessed(uuid: String) -> AppResult<Vec<WithdrawalsResponse>> {
+pub async fn get_withdrawals_list_unprocessed(_uuid: String) -> AppResult<Vec<WithdrawalsResponse>> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
+    //获取当前用户信息
+    let admin_query = SysUser::find_by_id(&_uuid).one(db).await?;
+    if admin_query.is_none() {
+        return Err(anyhow::anyhow!("用户不存在").into());
+    }else if admin_query.clone().unwrap().role != 0{
+        return Err(anyhow::anyhow!("没有权限").into());
+    }
     let query = withdrawals::Entity::find()
         .filter(withdrawals::Column::Status.eq(1))
         .all(db)
@@ -216,7 +226,7 @@ pub async fn post_withdrawals(req: u64, uuid: String) -> AppResult<()> {
         quantities: Set(req),
         arrive: Set(aarrive),
         create_date: Set(Local::now().naive_utc()),
-        tariff: Set(tariff_to.clone()),
+        tariff: Set(tariff_to),
         status: Set(1),
         ..Default::default()
     };
@@ -245,7 +255,7 @@ pub async fn recharge_for_custom(
 ) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
-    let admin_model = admin_query.clone().ok_or(anyhow::anyhow!("用户不存在"));
+    let _admin_model = admin_query.clone().ok_or(anyhow::anyhow!("用户不存在"));
     let custom_query = CustomUser::find_by_id(&from_data.user_uuid).one(db).await?;
     let usdt = from_data.balance_usdt + custom_query.clone().unwrap().balance_usdt;
     let mut custom_model: custom_user::ActiveModel = custom_query.clone().unwrap().into();
@@ -254,13 +264,13 @@ pub async fn recharge_for_custom(
     let transaction_id = format!(
         "{}:{}",
         admin_query.unwrap().user_uuid,
-        Uuid::new_v4().to_string()
+        Uuid::new_v4(),
     );
     // 创建充值记录
     let new_recharge = custom_recharge::ActiveModel {
         record_uuid: Set(Uuid::new_v4().to_string()),
         user_uuid: Set(from_data.user_uuid),
-        recharge_amount: Set(from_data.balance_usdt.clone()),
+        recharge_amount: Set(from_data.balance_usdt),
         payment_channel: Set("线下充值".to_string()),
         recharge_date: Set(Local::now().naive_utc()),
         recharge_status: Set(2),
@@ -374,7 +384,7 @@ pub async fn disable_custom_user(custom_uuid: String, admin_uuid: String) -> App
 pub async fn enable_custom_user(custom_uuid: String, admin_uuid: String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
-    if admin_query.unwrap().role.clone() > 1 {
+    if admin_query.unwrap().role > 1 {
         return Err(anyhow::anyhow!("无权限").into());
     }
     let custom_query = CustomUser::find_by_id(custom_uuid).one(db).await?;
@@ -448,7 +458,7 @@ pub async fn check_user_name(req: String) -> AppResult<()> {
         .filter(custom_user::Column::UserName.eq(req))
         .one(db)
         .await?;
-    if user_query != None {
+    if user_query.is_some() {
         return Err(anyhow::anyhow!("用户名已存在").into());
     }
     Ok(())
@@ -462,7 +472,7 @@ pub async fn change_admin_password(
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let user_query = SysUser::find_by_id(uuid).one(db).await?;
     let mut user_model: sys_user::ActiveModel = user_query.clone().unwrap().into();
-    if let Err(err) =
+    if let Err(_err) =
         rand_utils::verify_password(form_data.old_pwd, user_query.unwrap().clone().user_pwd).await
     {
         return Err(anyhow::anyhow!("密码错误").into());
@@ -526,8 +536,8 @@ pub async fn login(form_data: SysLoginRequest) -> AppResult<SysLoginResponse> {
     let (token, exp) = get_token(
         user_model.user_name.clone(),
         user_model.user_uuid.clone(),
-        Some(user_model.user_status.try_into().unwrap()),
-        Some(user_model.role.clone().try_into().unwrap()),
+        Some(user_model.user_status),
+        Some(user_model.role),
     )?;
 
     Ok(SysLoginResponse {
@@ -584,11 +594,11 @@ pub async fn list_custom_user(uuid: String) -> AppResult<Vec<CustomUserProfileRe
         .await
         .unwrap_or("".to_string());
     let mut _result: Vec<CustomUserProfileResponse> = Vec::new();
-    if _data.len() > 0 {
+    if !_data.is_empty() {
         _result =
             serde_json::from_str::<Vec<CustomUserProfileResponse>>(&_data).unwrap_or_default();
     }
-    if _result.len() > 0 {
+    if !_result.is_empty() {
         return Ok(_result);
     }
 
@@ -623,7 +633,7 @@ pub async fn list_admin_user(uuid: String) -> AppResult<Vec<SysUserProfileRespon
         .one(db)
         .await?;
     let user_model = user_query.clone().unwrap();
-    if user_model.role.clone() != 0 {
+    if user_model.role != 0 {
         return Err(anyhow::anyhow!("无权限").into());
     }
 
@@ -634,10 +644,10 @@ pub async fn list_admin_user(uuid: String) -> AppResult<Vec<SysUserProfileRespon
         .await
         .unwrap_or("".to_string());
     let mut _result: Vec<SysUserProfileResponse> = Vec::new();
-    if _data.len() > 0 {
+    if !_data.is_empty() {
         _result = serde_json::from_str::<Vec<SysUserProfileResponse>>(&_data).unwrap_or_default();
     }
-    if _result.len() > 0 {
+    if !_result.is_empty() {
         return Ok(_result);
     }
 

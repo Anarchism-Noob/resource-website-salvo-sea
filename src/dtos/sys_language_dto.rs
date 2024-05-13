@@ -1,6 +1,5 @@
-use salvo::prelude::{ToSchema};
-use sea_orm::prelude::*;
-use serde::{Serialize};
+use salvo::prelude::ToSchema;
+use serde::Serialize;
 use validator::Validate;
 
 #[derive(Serialize, Debug, Validate, ToSchema, Default)]

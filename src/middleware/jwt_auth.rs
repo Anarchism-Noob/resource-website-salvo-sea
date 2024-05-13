@@ -1,13 +1,8 @@
 use crate::{
     middleware::jwt,
-    utils::{
-        check_user::{check_user_admin, check_user_custom},
-    },
+    utils::check_user::{check_user_admin, check_user_custom},
 };
-use salvo::{
-    hyper::Uri,
-    prelude::*,
-};
+use salvo::{hyper::Uri, prelude::*};
 use std::collections::HashMap;
 
 #[handler]
@@ -19,7 +14,7 @@ pub async fn jwt_auth_middleware(
 ) {
     println!("jwt_auth_middleware--> load");
 
-    let item = match req.parse_headers::<HashMap<String, String>>() {
+    let _item = match req.parse_headers::<HashMap<String, String>>() {
         Ok(item) => item,
         Err(err) => {
             res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
@@ -40,7 +35,7 @@ pub async fn jwt_auth_middleware(
     let jwt_claims = match jwt::parse_token(&token) {
         Ok(claims) => claims,
         Err(err) => {
-             handle_internal_server_error(res, StatusCode::INTERNAL_SERVER_ERROR, err.to_string());
+            handle_internal_server_error(res, StatusCode::INTERNAL_SERVER_ERROR, err.to_string());
             return;
         }
     };
@@ -48,28 +43,28 @@ pub async fn jwt_auth_middleware(
     let uri: Uri = match req.uri().to_string().parse() {
         Ok(uri) => uri,
         Err(err) => {
-             handle_internal_server_error(res, StatusCode::INTERNAL_SERVER_ERROR, err.to_string());
+            handle_internal_server_error(res, StatusCode::INTERNAL_SERVER_ERROR, err.to_string());
             return;
         }
     };
 
     //判断token是cusotm还是admin
     match jwt_claims.role {
-        Some(role) => {
+        Some(_role) => {
             // 查看admin表中是否有这个用户
             let check_result = match check_user_admin(&jwt_claims.user_id).await {
                 Ok(admin_res) => admin_res,
-                Err(err) => {
+                Err(_err) => {
                     handle_unauthorized_access(res, ctrl);
                     return;
                 }
             };
-            if !is_admin_route(&uri.path()) {
+            if !is_admin_route(uri.path()) {
                 // 如果访问的路径不在 admin 路由中，则拒绝访问
                 handle_unauthorized_access(res, ctrl);
                 return;
             }
-            if is_super_admin_route(&uri.path()) {
+            if is_super_admin_route(uri.path()) {
                 // 如果访问的路径是超级管理员路由，则检查用户是否是超级管理员
                 if check_result.role != 0 {
                     handle_unauthorized_access(res, ctrl);
@@ -79,16 +74,16 @@ pub async fn jwt_auth_middleware(
         }
         None => {
             // 查看custom表中是否有这个用户
-            let check_result = match check_user_custom(&jwt_claims.user_id).await {
+            let _check_result = match check_user_custom(&jwt_claims.user_id).await {
                 // 如果用户存在，则返回结构体
                 Ok(custom_res) => custom_res,
-                Err(err) => {
+                Err(_err) => {
                     // 如果用户不存在，则进行错误处理
                     handle_unauthorized_access(res, ctrl);
                     return;
                 }
             };
-            if !is_custom_route(&uri.path()) {
+            if !is_custom_route(uri.path()) {
                 // 如果访问的路径不在 custom 路由中，则拒绝访问
                 handle_unauthorized_access(res, ctrl);
                 return;

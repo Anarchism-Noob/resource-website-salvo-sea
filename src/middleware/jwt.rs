@@ -1,6 +1,4 @@
-use crate::{
-    config::CFG,
-};
+use crate::config::CFG;
 use anyhow::Result;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, EncodingKey, Validation};
 use salvo::jwt_auth::{ConstDecoder, CookieFinder, HeaderFinder, QueryFinder};
@@ -69,7 +67,7 @@ pub fn decode_token(token: &str) -> bool {
 pub fn parse_token(token: &str) -> Result<JwtClaims, anyhow::Error> {
     let validation = Validation::new(Algorithm::HS256);
     return match decode::<JwtClaims>(
-        &token,
+        token,
         &DecodingKey::from_secret(CFG.jwt.jwt_secret.as_bytes()),
         &validation,
     ) {

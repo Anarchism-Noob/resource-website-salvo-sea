@@ -23,10 +23,10 @@ use uuid::Uuid;
 pub async fn delete_carousel(img: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = sys_carousel_service::delete_carousel(img.0, uuid).await;
     AppWriter(_result)
@@ -46,11 +46,11 @@ pub async fn put_create_carousel(
 ) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
-        return ErrorResponseBuilder::with_err(AppError::AnyHow(err).into()).into_response(res);
+    if let Err(err) = jwt::parse_token(token) {
+        return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _form_data = form_data.0;
     let _result = sys_carousel_service::create_carouwsel(_form_data, uuid).await;
@@ -88,7 +88,7 @@ pub async fn post_upload_carousel(req: &mut Request, res: &mut Response) {
                 extension.to_str().unwrap_or("png")
             ));
 
-            let info = if let Err(e) = std::fs::copy(&file.path(), &dest) {
+            let info = if let Err(e) = std::fs::copy(file.path(), &dest) {
                 res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
                 format!("file not found in request: {}", e)
             } else {

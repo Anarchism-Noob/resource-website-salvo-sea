@@ -1,8 +1,7 @@
 use crate::{
     app_writer::{AppWriter, ErrorResponseBuilder},
     dtos::sys_resources_dto::{
-        SysResourceChangeLink, SysResourceCreateRequest, SysResourceList,
-        SysResourceResponse,
+        SysResourceChangeLink, SysResourceCreateRequest, SysResourceList, SysResourceResponse,
     },
     middleware::jwt,
     services::sys_resource_service,
@@ -24,10 +23,10 @@ use uuid::Uuid;
 pub async fn delete_image(req: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppWriter(Err(err.into()));
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let image_uuid = req.0;
     let result = sys_resource_service::delete_image(image_uuid, uuid).await;
@@ -44,10 +43,10 @@ pub async fn get_resource_detail_by_uuid(
 
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppWriter(Err(err.into()));
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let role: Option<u32> = jwt_model.role;
 
@@ -73,14 +72,12 @@ pub async fn get_resources_of_category_and_language(
     .await
     {
         Ok(result) => AppWriter(Ok(result)),
-        Err(err) => AppWriter(Err(err.into())),
+        Err(err) => AppWriter(Err(err)),
     }
 }
 
 #[endpoint(tags("根据类型获取资源列表"))]
-pub async fn get_resources_of_category(
-    req: &mut Request,
-) -> AppWriter<Vec<SysResourceList>> {
+pub async fn get_resources_of_category(req: &mut Request) -> AppWriter<Vec<SysResourceList>> {
     // 从url中获取category
     let category = req.query::<String>("category").unwrap();
 
@@ -90,14 +87,12 @@ pub async fn get_resources_of_category(
     // 调用service处理
     match sys_resource_service::get_resources_of_category(category, page, page_size).await {
         Ok(result) => AppWriter(Ok(result)),
-        Err(err) => AppWriter(Err(err.into())),
+        Err(err) => AppWriter(Err(err)),
     }
 }
 
 #[endpoint(tags("根据语言获取资源列表"))]
-pub async fn get_resource_list_of_language(
-    req: &mut Request,
-) -> AppWriter<Vec<SysResourceList>> {
+pub async fn get_resource_list_of_language(req: &mut Request) -> AppWriter<Vec<SysResourceList>> {
     // 从url中获取language和category
     let language = req.query::<String>("language").unwrap();
 
@@ -107,21 +102,19 @@ pub async fn get_resource_list_of_language(
     // 调用service处理
     match sys_resource_service::get_resours_of_language(language, page, page_size).await {
         Ok(result) => AppWriter(Ok(result)),
-        Err(err) => AppWriter(Err(err.into())),
+        Err(err) => AppWriter(Err(err)),
     }
 }
 
 #[endpoint(tags("获取资源列表"))]
-pub async fn get_resource_list(
-    req: &mut Request,
-) -> AppWriter<Vec<SysResourceList>> {
+pub async fn get_resource_list(req: &mut Request) -> AppWriter<Vec<SysResourceList>> {
     // 从请求中获取分页参数
     let page = req.query::<u64>("page").unwrap_or(1);
     let page_size = req.query::<u64>("page_size").unwrap_or(49);
     // 调用service处理
     match sys_resource_service::get_resource_list(page, page_size).await {
         Ok(result) => AppWriter(Ok(result)),
-        Err(err) => AppWriter(Err(err.into())),
+        Err(err) => AppWriter(Err(err)),
     }
 }
 
@@ -145,11 +138,11 @@ pub async fn post_create_resource(
 
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     if let Err(_err) = sys_resource_service::create_resource(form_data, uuid).await {
@@ -183,7 +176,7 @@ pub async fn put_upload_description(req: &mut Request, res: &mut Response) {
             dest.push(format!("{}.{}", file_name, extension));
 
             // 保存文件
-            let info = if let Err(e) = std::fs::copy(&file.path(), &dest) {
+            let info = if let Err(e) = std::fs::copy(file.path(), &dest) {
                 res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
                 format!("file not found in request: {}", e)
             } else {
@@ -224,7 +217,7 @@ pub async fn put_upload_image(req: &mut Request, res: &mut Response) {
                     extension.to_str().unwrap_or("jpg")
                 ));
 
-                if let Err(e) = std::fs::copy(&file.path(), &dest) {
+                if let Err(e) = std::fs::copy(file.path(), &dest) {
                     res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
                     res.render(Json(format!("file not found in request: {}", e)));
                 } else {

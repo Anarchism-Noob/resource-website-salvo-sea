@@ -1,10 +1,13 @@
 use crate::{
     app_writer::{AppResult, AppWriter, ErrorResponseBuilder},
     dtos::{
-        count_data_dto::CountDataResponse, custom_user_dto::{CustomUserProfileResponse, RechargeOfAdminRequest}, sys_user_dto::{
+        count_data_dto::CountDataResponse,
+        custom_user_dto::{CustomUserProfileResponse, RechargeOfAdminRequest},
+        sys_user_dto::{
             ChangeAdminProfileRequest, ChangeAdminPwdRequest, SysLoginRequest, SysLoginResponse,
             SysUserCrateRequest, SysUserProfileResponse,
-        }, withdrawals_dto::WithdrawalsResponse
+        },
+        withdrawals_dto::WithdrawalsResponse,
     },
     middleware::jwt::{self},
     services::admin_user_service,
@@ -22,20 +25,17 @@ use salvo::{
     prelude::*,
     Request, Response, Writer,
 };
-use std::{
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 use uuid::Uuid;
-
 
 #[endpoint(tags("获取历史数据"))]
 pub async fn get_history_data(depot: &mut Depot) -> AppWriter<CountDataResponse> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::get_history_data(uuid).await;
     AppWriter(_result)
@@ -45,10 +45,10 @@ pub async fn get_history_data(depot: &mut Depot) -> AppWriter<CountDataResponse>
 pub async fn put_withdraw_process(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::post_withdraw_process(req.0, uuid).await;
     AppWriter(_result)
@@ -59,10 +59,10 @@ pub async fn get_withdraw_list_unprocessed(
     depot: &mut Depot,
 ) -> AppWriter<Vec<WithdrawalsResponse>> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::get_withdrawals_list_unprocessed(uuid).await;
     AppWriter(_result)
@@ -72,10 +72,10 @@ pub async fn get_withdraw_list_unprocessed(
 pub async fn get_withdraw_list(depot: &mut Depot) -> AppWriter<Vec<WithdrawalsResponse>> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::get_withdrawals_list(uuid).await;
     AppWriter(_result)
@@ -85,10 +85,10 @@ pub async fn get_withdraw_list(depot: &mut Depot) -> AppWriter<Vec<WithdrawalsRe
 pub async fn put_withdraw(req: JsonBody<u64>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::post_withdrawals(req.0, uuid).await;
     AppWriter(_result)
@@ -101,10 +101,10 @@ pub async fn put_recharge(
 ) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let get_request = form_data.0;
     let result = admin_user_service::recharge_for_custom(get_request, uuid).await;
@@ -115,10 +115,10 @@ pub async fn put_recharge(
 pub async fn disable_admin(admin_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::disable_admin_user(admin_uuid.0, uuid).await;
     AppWriter(_result)
@@ -128,10 +128,10 @@ pub async fn disable_admin(admin_uuid: PathParam<String>, depot: &mut Depot) -> 
 pub async fn enable_admin(admin_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::enable_admin_user(admin_uuid.0, uuid).await;
     AppWriter(_result)
@@ -141,11 +141,11 @@ pub async fn enable_admin(admin_uuid: PathParam<String>, depot: &mut Depot) -> A
 pub async fn disable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::disable_custom_user(custom_uuid.0, uuid).await;
     AppWriter(_result)
@@ -155,10 +155,10 @@ pub async fn disable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) -
 pub async fn enable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::enable_custom_user(custom_uuid.0, uuid).await;
     AppWriter(_result)
@@ -168,11 +168,11 @@ pub async fn enable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) ->
 pub async fn get_admin_list(depot: &mut Depot) -> AppWriter<Vec<SysUserProfileResponse>> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::list_admin_user(uuid).await;
     AppWriter(_result)
@@ -182,11 +182,11 @@ pub async fn get_admin_list(depot: &mut Depot) -> AppWriter<Vec<SysUserProfileRe
 pub async fn get_custom_list(depot: &mut Depot) -> AppWriter<Vec<CustomUserProfileResponse>> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::list_custom_user(uuid).await;
     AppWriter(_result)
@@ -199,11 +199,11 @@ pub async fn put_change_profile(
 ) -> AppWriter<SysUserProfileResponse> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     let get_request = form_data.0;
@@ -216,11 +216,11 @@ pub async fn put_change_profile(
 pub async fn get_token_profile(depot: &mut Depot) -> AppWriter<SysUserProfileResponse> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = admin_user_service::get_admin_profile(uuid).await;
     AppWriter(_result)
@@ -231,11 +231,11 @@ pub async fn get_token_profile(depot: &mut Depot) -> AppWriter<SysUserProfileRes
 pub async fn put_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut Response) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     // 创建一个uploads目录，用于保存上传的文件
@@ -259,7 +259,7 @@ pub async fn put_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut R
                 extension.to_str().unwrap_or("png")
             ));
 
-            let info = if let Err(e) = std::fs::copy(&file.path(), &dest) {
+            let info = if let Err(e) = std::fs::copy(file.path(), &dest) {
                 res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
                 format!("file not found in request: {}", e)
             } else {
@@ -287,10 +287,10 @@ pub async fn put_change_password(
 ) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     let user_req = req.0;
@@ -355,11 +355,11 @@ pub async fn post_register_admin(
     let _model = form_data.0;
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
-        return ErrorResponseBuilder::with_err(AppError::AnyHow(err.into())).into_response(res);
+    if let Err(err) = jwt::parse_token(token) {
+        return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     if let Err(err) = admin_user_service::check_user_name(_model.user_name.clone()).await {

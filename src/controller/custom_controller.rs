@@ -17,27 +17,22 @@ use crate::{
 };
 use salvo::{
     http::{cookie::Cookie, StatusCode},
-    oapi::{
-        endpoint,
-        extract::{JsonBody},
-    },
+    oapi::{endpoint, extract::JsonBody},
     prelude::Json,
     Depot, Request, Response, Writer,
 };
-use std::{
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
 #[endpoint(tags("获取历史订单",))]
 pub async fn get_orders(depot: &mut Depot) -> AppWriter<Vec<CustomOrderResponse>> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     let result = custom_user_service::list_orders(uuid).await;
@@ -51,11 +46,11 @@ pub async fn put_buy_resource(
 ) -> AppWriter<CustomOrderResponse> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     let model = form_data.0;
@@ -70,11 +65,11 @@ pub async fn put_change_profile(
 ) -> AppWriter<CustomUserProfileResponse> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     let get_request = form_data.0;
@@ -87,11 +82,11 @@ pub async fn put_change_profile(
 pub async fn get_user_profile(depot: &mut Depot) -> AppWriter<CustomUserProfileResponse> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
     let _result = custom_user_service::get_user_profile(uuid).await;
     AppWriter(_result)
@@ -102,11 +97,11 @@ pub async fn get_user_profile(depot: &mut Depot) -> AppWriter<CustomUserProfileR
 pub async fn put_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut Response) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
     }
 
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     // 创建一个uploads目录，用于保存上传的文件
@@ -130,7 +125,7 @@ pub async fn put_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut R
                 extension.to_str().unwrap_or("png")
             ));
 
-            let info = if let Err(e) = std::fs::copy(&file.path(), &dest) {
+            let info = if let Err(e) = std::fs::copy(file.path(), &dest) {
                 res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
                 format!("file not found in request: {}", e)
             } else {
@@ -203,10 +198,10 @@ pub async fn put_change_password(
 ) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(&token) {
+    if let Err(err) = jwt::parse_token(token) {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
     }
-    let jwt_model = jwt::parse_token(&token).unwrap();
+    let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
     let user_req = req.0;

@@ -49,7 +49,7 @@ pub async fn del_language(id: i32, uuid: String)-> AppResult<()>{
     }
     let language_query = SysResourceLanguage::find_by_id(id).one(db).await?;
 
-    let language = language_query.ok_or(anyhow::anyhow!("语言类型不存在"))?;
+    let _language = language_query.ok_or(anyhow::anyhow!("语言类型不存在"))?;
     SysResourceLanguage::delete_by_id(id).exec(db).await?;
     Ok(())
 }

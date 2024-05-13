@@ -4,11 +4,9 @@ mod custom;
 use salvo::prelude::Router;
 
 pub fn router() -> Router {
-    let router = Router::new()
+    Router::new()
         .push(Router::with_path("/custom/api/").push(custom::api()))
-        .push(Router::with_path("/system/api").push(admin::api()));
-
-    router
+        .push(Router::with_path("/system/api").push(admin::api()))
 }
 
 // pub fn router_whitelist() -> Vec<String> {
