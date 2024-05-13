@@ -32,6 +32,7 @@ pub async fn super_admin_init() {
         .await;
     match data_query {
         Ok(Some(_model)) => {
+            
             println!("超级管理员已初始化");
         }
         Ok(None) => {
@@ -48,7 +49,7 @@ pub async fn super_admin_init() {
                 nick_name: Set("超级管理员".to_string()),
                 user_name: Set("superadmin".to_string()),
                 user_pwd: Set(hashed_pwd),
-                balance: Set(Default::default()),
+                balance: Set(0),
                 liaison: Set("/t.me/bitpieok".to_string()),
                 user_status: Set(0),
                 role: Set(0),
@@ -131,13 +132,15 @@ pub async fn post_withdraw_process(withdrawals_uuid: String, uuid: String) -> Ap
 }
 
 // 获取未处理的取款记录
-pub async fn get_withdrawals_list_unprocessed(_uuid: String) -> AppResult<Vec<WithdrawalsResponse>> {
+pub async fn get_withdrawals_list_unprocessed(
+    _uuid: String,
+) -> AppResult<Vec<WithdrawalsResponse>> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     //获取当前用户信息
     let admin_query = SysUser::find_by_id(&_uuid).one(db).await?;
     if admin_query.is_none() {
         return Err(anyhow::anyhow!("用户不存在").into());
-    }else if admin_query.clone().unwrap().role != 0{
+    } else if admin_query.clone().unwrap().role != 0 {
         return Err(anyhow::anyhow!("没有权限").into());
     }
     let query = withdrawals::Entity::find()
@@ -261,11 +264,7 @@ pub async fn recharge_for_custom(
     let mut custom_model: custom_user::ActiveModel = custom_query.clone().unwrap().into();
     custom_model.balance_usdt = Set(usdt);
     custom_model.update(db).await?;
-    let transaction_id = format!(
-        "{}:{}",
-        admin_query.unwrap().user_uuid,
-        Uuid::new_v4(),
-    );
+    let transaction_id = format!("{}:{}", admin_query.unwrap().user_uuid, Uuid::new_v4(),);
     // 创建充值记录
     let new_recharge = custom_recharge::ActiveModel {
         record_uuid: Set(Uuid::new_v4().to_string()),
