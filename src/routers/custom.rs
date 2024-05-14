@@ -21,7 +21,7 @@ pub fn api() -> Router {
             // 用户登陆
             .push(
                 Router::with_path("login")
-                    .push(Router::with_path("captchaType = <captchaType>").get(get_captcha))
+                    .push(Router::with_path("<captchaType>").get(get_captcha))
                     .push(Router::with_path("get_login_bg").get(get_custom_bg))
                     .push(Router::with_path("loading").post(post_login)),
             )
@@ -30,35 +30,44 @@ pub fn api() -> Router {
             .push(
                 // 用户注册
                 Router::with_path("register")
-                    .push(Router::with_path("captchaType = <captchaType>").get(get_captcha))
+                    .push(Router::with_path("<captchaType>").get(get_captcha))
                     .push(Router::with_path("create").post(post_register)),
             ),
         // 首页
         Router::with_path("index")
-            .push(Router::with_path("all").get(get_resource_list))
-            .push(Router::with_path("carousel").get(get_carousel))
             .push(
-                Router::with_path("language = <language>,page = <page>, size = <pageSize>")
-                    .get(get_resource_list_of_language),
+                Router::with_path("resources")
+                    .get(get_resource_list)
+                    .push(Router::with_path("<uuid>").get(get_resource_detail_by_uuid))
+                    .push(
+                        Router::with_path("<language>").get(get_resource_list_of_language)
+                    )
+                    .push(
+                        Router::with_path("<category>").get(get_resources_of_category)
+                    )
+                    .push(
+                        Router::with_path("<category>").path("<language>")
+                            .get(get_resources_of_category_and_language)
+                    ),
             )
-            .push(Router::with_path("<category>/<page>/<pageSize>").get(get_resources_of_category))
-            .push(
-                Router::with_path("<language>/<category>/<page>/<pageSize>")
-                    .get(get_resources_of_category_and_language),
-            )
-            .push(Router::with_path("<uuid>").get(get_resource_detail_by_uuid)),
+            .push(Router::with_path("carousel").get(get_carousel)),
     ];
 
     let _cors_handler = cors_middleware();
 
     let mut need_auth_routers = vec![
-        Router::with_path("orders/<uuid>").get(get_orders),
-        Router::with_path("resource/<uuid>").put(put_buy_resource),
-        Router::with_path("profile")
-            .push(Router::with_path("view/<uuid>").get(get_user_profile))
-            .push(Router::with_path("update_pwd/<uuid>").put(put_change_password))
-            .push(Router::with_path("change/<uuid>").put(put_change_profile))
-            .push(Router::with_path("avatar").put(put_upload_avatar)),
+        Router::with_path("user")
+        .push(
+            Router::with_path("profile")
+                .push(Router::with_path("view/<uuid>").get(get_user_profile))
+                .push(Router::with_path("change_pwd/<uuid>").put(put_change_password))
+                .push(Router::with_path("change_profile/<uuid>").put(put_change_profile))
+                .push(Router::with_path("orders/<uuid>").get(get_orders))
+                .push(Router::with_path("avatar").put(put_upload_avatar))
+        )
+        .push(
+            Router::with_path("resource/<uuid>").put(put_buy_resource)
+        ),
     ];
 
     let router = Router::new()
