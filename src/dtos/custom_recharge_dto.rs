@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
-use salvo::prelude::{ToSchema};
-use serde::{Deserialize};
+use salvo::prelude::ToSchema;
+use serde::Deserialize;
 use validator::Validate;
 
 #[derive(Deserialize, Debug, Validate, ToSchema, Default)]
@@ -11,7 +11,7 @@ pub struct CustomRechargeRecordsCreateRequest {
     pub user_uuid: String,
     pub recharge_amount: u64,
     pub payment_channel: String,
-    pub recharge_status: i32,
+    pub recharge_status: u32,
     pub recharge_date: DateTime<Utc>,
     pub transaction_id: String,
     pub remark: Option<String>,

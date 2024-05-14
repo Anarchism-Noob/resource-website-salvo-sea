@@ -1,4 +1,4 @@
-use salvo::prelude::{ToSchema};
+use salvo::prelude::ToSchema;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -7,6 +7,6 @@ use validator::Validate;
 #[serde(rename_all = "camelCase")]
 pub struct SysResourceImageCreateRequest {
     pub id: i32,
-    pub resource_uuid: i32,
-    pub image_uuid: i32,
+    pub resource_uuid: String,
+    pub image_uuid: String,
 }
