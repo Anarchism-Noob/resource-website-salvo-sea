@@ -1,7 +1,8 @@
 use crate::{
     app_writer::{AppWriter, ErrorResponseBuilder},
     dtos::sys_resources_dto::{
-        SysResourceChangeLink, SysResourceCreateRequest, SysResourceList, SysResourceResponse,
+        PaginationParams, SysResourceChangeLink, SysResourceCreateRequest, SysResourceList,
+        SysResourceResponse,
     },
     middleware::jwt,
     services::sys_resource_service,
@@ -11,7 +12,7 @@ use salvo::{
     http::StatusCode,
     oapi::{
         endpoint,
-        extract::{JsonBody, PathParam},
+        extract::{JsonBody, PathParam, QueryParam},
     },
     prelude::Json,
     Depot, Request, Response, Writer,
@@ -56,15 +57,20 @@ pub async fn get_resource_detail_by_uuid(
 
 #[endpoint(tags("根据类型和语言获取资源列表"))]
 pub async fn get_resources_of_category_and_language(
-    req: &mut Request,
+    // req: &mut Request,
+    query: PaginationParams,
 ) -> AppWriter<Vec<SysResourceList>> {
-    // 从url中获取language和category
-    let language = req.query::<String>("language").unwrap();
-    let category = req.query::<String>("category").unwrap();
+    // 从路径中获取language和category
+    let category = query.0;
+    let language = query.1;
+    let page = query.2;
+    let page_size = query.3;
+    // let language = query.param::<String>("language").unwrap();
+    // let category = query.param::<String>("category").unwrap();
 
-    // 从请求中获取分页参数
-    let page = req.query::<u64>("page").unwrap_or(1);
-    let page_size = req.query::<u64>("page_size").unwrap_or(49);
+    // 从查询参数中获取分页参数
+    // let page = query.param::<u64>("page").unwrap_or(1);
+    // let page_size = query.param::<u64>("pageSize").unwrap_or(49);
     // 调用service处理
     match sys_resource_service::get_resources_by_category_and_language(
         category, language, page, page_size,
@@ -92,15 +98,20 @@ pub async fn get_resources_of_category(req: &mut Request) -> AppWriter<Vec<SysRe
 }
 
 #[endpoint(tags("根据语言获取资源列表"))]
-pub async fn get_resource_list_of_language(req: &mut Request) -> AppWriter<Vec<SysResourceList>> {
+pub async fn get_resource_list_of_language(
+    language: QueryParam<String, false>,
+    req: &mut Request,
+) -> AppWriter<Vec<SysResourceList>> {
     // 从url中获取language和category
-    let language = req.query::<String>("language").unwrap();
+    // let language = req.query::<String>("language").unwrap();
+    let language = language.as_deref().unwrap_or("PHP");
 
     // 从请求中获取分页参数
     let page = req.query::<u64>("page").unwrap_or(1);
     let page_size = req.query::<u64>("page_size").unwrap_or(49);
     // 调用service处理
-    match sys_resource_service::get_resours_of_language(language, page, page_size).await {
+    match sys_resource_service::get_resours_of_language(language.to_string(), page, page_size).await
+    {
         Ok(result) => AppWriter(Ok(result)),
         Err(err) => AppWriter(Err(err)),
     }
@@ -109,7 +120,7 @@ pub async fn get_resource_list_of_language(req: &mut Request) -> AppWriter<Vec<S
 #[endpoint(tags("获取资源列表"))]
 pub async fn get_resource_list(req: &mut Request) -> AppWriter<Vec<SysResourceList>> {
     // 从请求中获取查询条件
-    let query = req.query::<String>("all").unwrap_or("".to_string());
+    let _query = req.query::<String>("all").unwrap_or("".to_string());
     // 从请求中获取分页参数
     let page = req.query::<u64>("page").unwrap_or(1);
     let page_size = req.query::<u64>("page_size").unwrap_or(49);

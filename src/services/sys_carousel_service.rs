@@ -2,7 +2,7 @@ use crate::{
     app_writer::AppResult,
     dtos::sys_carousel_dto::{CreateCarouselRequest, QueryCarouselResponse},
     entities::{
-        prelude::{SysCarousel, SysUser, SysImage},
+        prelude::{SysCarousel, SysImage, SysUser},
         sys_carousel, sys_image,
     },
     utils::db::DB,
@@ -32,11 +32,12 @@ pub async fn create_carouwsel(form_data: CreateCarouselRequest, uuid: String) ->
     Ok(())
 }
 
-pub async fn save_carsousel(image_path: String, file_name: String) -> AppResult<String> {
+#[allow(dead_code)]
+pub async fn save_carsousel(image_path: String, _file_name: String) -> AppResult<String> {
     let db = DB.get().ok_or(anyhow::anyhow!("数据库连接失败")).unwrap();
     let res = sys_image::ActiveModel {
         image_uuid: Set(Uuid::new_v4().to_string()),
-        image_name: Set(file_name),
+        image_name: Set(_file_name),
         image_path: Set(image_path),
         ..Default::default()
     }
@@ -68,10 +69,17 @@ pub async fn get_carousel() -> AppResult<Vec<QueryCarouselResponse>> {
     Ok(res_vec)
 }
 
+#[allow(dead_code)]
 pub async fn delete_carousel(image_uuid: String, admin_uuid: String) -> AppResult<()> {
     let db = DB.get().ok_or(anyhow::anyhow!("数据库连接失败")).unwrap();
     let admin_query = SysUser::find_by_id(&admin_uuid).one(db).await?;
     let _admin_model = admin_query.ok_or(anyhow::anyhow!("管理员不存在"));
+    match _admin_model {
+        Ok(_) => {}
+        Err(_) => {
+            return Err(anyhow::anyhow!("管理员不存在").into());
+        }
+    }
 
     let carousel_query = SysCarousel::find()
         .filter(sys_carousel::Column::ImageUuid.eq(&image_uuid))

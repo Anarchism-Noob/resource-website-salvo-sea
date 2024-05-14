@@ -10,7 +10,7 @@ pub async fn init_db_conn() {
             .min_connections(5)
             .connect_timeout(Duration::from_secs(8))
             .idle_timeout(Duration::from_secs(8))
-            .sqlx_logging(true);
+            .sqlx_logging(false);
         Database::connect(opt).await.expect("数据库打开失败")
     })
     .await;

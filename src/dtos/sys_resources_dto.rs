@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use salvo::prelude::ToSchema;
+use salvo::{oapi::ToParameters, prelude::ToSchema};
 use sea_orm::prelude::Decimal;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -24,8 +24,11 @@ pub struct SysResourceList {
     pub resource_image: String,
 }
 
-// #[derive(Debug, Clone, Deserialize, ToSchema, Default)]
-// #[salvo(schema(rename_all = "camelCase"))]
+#[derive(Debug, Deserialize, Default, ToParameters)]
+#[serde(rename_all = "camelCase")]
+#[salvo(parameters(names("category", "language", "page", "page_size")))]
+pub struct PaginationParams(pub String, pub String, pub u64, pub u64);
+// #[derive(Debug, Deserialize, ToSchema, Default, ToParameters)]
 // #[serde(rename_all = "camelCase")]
 // pub struct PaginationParams {
 //     pub page: Option<u64>,

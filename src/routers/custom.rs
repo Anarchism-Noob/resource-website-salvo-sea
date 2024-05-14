@@ -29,10 +29,13 @@ pub fn api() -> Router {
         Router::with_path("index")
             .push(Router::with_path("/all").get(get_resource_list))
             .push(Router::with_path("carousel").get(get_carousel))
-            .push(Router::with_path("<language>").get(get_resource_list_of_language))
-            .push(Router::with_path("<category>").get(get_resources_of_category))
             .push(
-                Router::with_path("<language>/<category>")
+                Router::with_path("<language>/<page>/<pageSize>")
+                    .get(get_resource_list_of_language),
+            )
+            .push(Router::with_path("<category>/<page>/<pageSize>").get(get_resources_of_category))
+            .push(
+                Router::with_path("<language>/<category>/<page>/<pageSize>")
                     .get(get_resources_of_category_and_language),
             )
             .push(Router::with_path("<uuid>").get(get_resource_detail_by_uuid)),
