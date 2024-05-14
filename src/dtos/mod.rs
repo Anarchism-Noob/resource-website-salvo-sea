@@ -2,6 +2,7 @@ pub mod count_data_dto;
 pub mod custom_orders_dto;
 pub mod custom_recharge_dto;
 pub mod custom_user_dto;
+pub mod query_struct;
 pub mod sys_carousel_dto;
 pub mod sys_category_dto;
 pub mod sys_image_dto;

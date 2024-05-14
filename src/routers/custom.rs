@@ -17,20 +17,28 @@ use salvo::prelude::{CatchPanic, Logger, OpenApi, Router, SwaggerUi};
 
 pub fn api() -> Router {
     let mut no_auth_router = vec![
-        Router::with_path("captcha").get(get_captcha),
-        Router::with_path("website").get(get_website_profile),
-        // 用户登陆
-        Router::with_path("login")
-            .post(post_login)
-            .push(Router::with_path("login_bg").get(get_custom_bg)),
-        // 用户注册
-        Router::with_path("register").post(post_register),
+        Router::with_path("comm")
+            // 用户登陆
+            .push(
+                Router::with_path("login")
+                    .push(Router::with_path("captchaType = <captchaType>").get(get_captcha))
+                    .push(Router::with_path("get_login_bg").get(get_custom_bg))
+                    .push(Router::with_path("loading").post(post_login)),
+            )
+            // 获取网站信息
+            .push(Router::with_path("get_website").get(get_website_profile))
+            .push(
+                // 用户注册
+                Router::with_path("register")
+                    .push(Router::with_path("captchaType = <captchaType>").get(get_captcha))
+                    .push(Router::with_path("create").post(post_register)),
+            ),
         // 首页
         Router::with_path("index")
-            .push(Router::with_path("/all").get(get_resource_list))
+            .push(Router::with_path("all").get(get_resource_list))
             .push(Router::with_path("carousel").get(get_carousel))
             .push(
-                Router::with_path("<language>/<page>/<pageSize>")
+                Router::with_path("language = <language>,page = <page>, size = <pageSize>")
                     .get(get_resource_list_of_language),
             )
             .push(Router::with_path("<category>/<page>/<pageSize>").get(get_resources_of_category))
@@ -47,9 +55,9 @@ pub fn api() -> Router {
         Router::with_path("orders/<uuid>").get(get_orders),
         Router::with_path("resource/<uuid>").put(put_buy_resource),
         Router::with_path("profile")
-            .push(Router::with_path("<uuid>").get(get_user_profile))
-            .push(Router::with_path("<uuid>").put(put_change_password))
-            .push(Router::with_path("<uuid>").put(put_change_profile))
+            .push(Router::with_path("view/<uuid>").get(get_user_profile))
+            .push(Router::with_path("update_pwd/<uuid>").put(put_change_password))
+            .push(Router::with_path("change/<uuid>").put(put_change_profile))
             .push(Router::with_path("avatar").put(put_upload_avatar)),
     ];
 
@@ -67,5 +75,5 @@ pub fn api() -> Router {
     let doc = OpenApi::new("Resource WebSite API", "0.1.1").merge_router(&router);
     router
         .push(doc.into_router("/api-doc/openapi.json"))
-        .push(SwaggerUi::new("/api-doc/openapi.json").into_router("swagger-ui"))
+        .push(SwaggerUi::new("/custom/api/api-doc/openapi.json").into_router("swagger-ui"))
 }

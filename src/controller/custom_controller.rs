@@ -145,9 +145,10 @@ pub async fn put_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut R
 
 #[endpoint(tags("获取验证码"))]
 pub async fn get_captcha(req: &mut Request, res: &mut Response) {
+    // 从查询参数中获取验证码类型
+    let captcha_type = req.query::<String>("captchaType").unwrap_or_default();
     // 生成验证码
-    let captcha_result: AppResult<CaptchaImage> =
-        generate_captcha(&req.param::<String>("captchaType").unwrap_or_default()).await;
+    let captcha_result: AppResult<CaptchaImage> = generate_captcha(&captcha_type).await;
     match captcha_result {
         Ok(captcha) => {
             res.render(Json(captcha));

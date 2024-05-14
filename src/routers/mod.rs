@@ -5,7 +5,10 @@ use salvo::prelude::Router;
 
 pub fn router() -> Router {
     Router::new()
-        .push(Router::with_path("/custom/api/").push(custom::api()))
+        .push(
+            Router::with_path("/custom/api/")
+            .push(custom::api())
+        )
         .push(Router::with_path("/system/api").push(admin::api()))
 }
 

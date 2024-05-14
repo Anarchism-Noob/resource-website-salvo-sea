@@ -1,8 +1,10 @@
 use crate::{
     app_writer::{AppWriter, ErrorResponseBuilder},
-    dtos::sys_resources_dto::{
-        PaginationParams, SysResourceChangeLink, SysResourceCreateRequest, SysResourceList,
-        SysResourceResponse,
+    dtos::{
+        query_struct::QueryParamsStruct,
+        sys_resources_dto::{
+            SysResourceChangeLink, SysResourceCreateRequest, SysResourceList, SysResourceResponse,
+        },
     },
     middleware::jwt,
     services::sys_resource_service,
@@ -12,7 +14,7 @@ use salvo::{
     http::StatusCode,
     oapi::{
         endpoint,
-        extract::{JsonBody, PathParam, QueryParam},
+        extract::{JsonBody, PathParam},
     },
     prelude::Json,
     Depot, Request, Response, Writer,
@@ -40,7 +42,9 @@ pub async fn get_resource_detail_by_uuid(
     depot: &mut Depot,
 ) -> AppWriter<SysResourceResponse> {
     // 从url获取uuid
-    let resource_uuid = req.query::<String>("resource").unwrap();
+    let query_params: QueryParamsStruct = req.extract().await.unwrap();
+    let resource_uuid = query_params.resource_uuid.unwrap();
+    // let resource_uuid = req.query::<String>("resource").unwrap();
 
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
@@ -57,20 +61,14 @@ pub async fn get_resource_detail_by_uuid(
 
 #[endpoint(tags("根据类型和语言获取资源列表"))]
 pub async fn get_resources_of_category_and_language(
-    // req: &mut Request,
-    query: PaginationParams,
+    query: &mut Request,
 ) -> AppWriter<Vec<SysResourceList>> {
     // 从路径中获取language和category
-    let category = query.0;
-    let language = query.1;
-    let page = query.2;
-    let page_size = query.3;
-    // let language = query.param::<String>("language").unwrap();
-    // let category = query.param::<String>("category").unwrap();
-
-    // 从查询参数中获取分页参数
-    // let page = query.param::<u64>("page").unwrap_or(1);
-    // let page_size = query.param::<u64>("pageSize").unwrap_or(49);
+    let query_params: QueryParamsStruct = query.extract().await.unwrap();
+    let language = query_params.language.unwrap();
+    let category = query_params.category.unwrap();
+    let page = query_params.page.unwrap();
+    let page_size = query_params.page_size.unwrap();
     // 调用service处理
     match sys_resource_service::get_resources_by_category_and_language(
         category, language, page, page_size,
@@ -84,12 +82,12 @@ pub async fn get_resources_of_category_and_language(
 
 #[endpoint(tags("根据类型获取资源列表"))]
 pub async fn get_resources_of_category(req: &mut Request) -> AppWriter<Vec<SysResourceList>> {
-    // 从url中获取category
-    let category = req.query::<String>("category").unwrap();
+    // 从url中获取category和分页
+    let query_params: QueryParamsStruct = req.extract().await.unwrap();
+    let category = query_params.category.unwrap();
+    let page = query_params.page.unwrap();
+    let page_size = query_params.page_size.unwrap();
 
-    // 从请求中获取分页参数
-    let page = req.query::<u64>("page").unwrap_or(1);
-    let page_size = req.query::<u64>("page_size").unwrap_or(49);
     // 调用service处理
     match sys_resource_service::get_resources_of_category(category, page, page_size).await {
         Ok(result) => AppWriter(Ok(result)),
@@ -99,19 +97,16 @@ pub async fn get_resources_of_category(req: &mut Request) -> AppWriter<Vec<SysRe
 
 #[endpoint(tags("根据语言获取资源列表"))]
 pub async fn get_resource_list_of_language(
-    language: QueryParam<String, false>,
-    req: &mut Request,
+    query_param: &mut Request,
 ) -> AppWriter<Vec<SysResourceList>> {
-    // 从url中获取language和category
-    // let language = req.query::<String>("language").unwrap();
-    let language = language.as_deref().unwrap_or("PHP");
+    // 从url中获取language和分页
+    let get_params: QueryParamsStruct = query_param.extract().await.unwrap();
+    let language = get_params.language.unwrap();
+    let page = get_params.page.unwrap();
+    let page_size = get_params.page_size.unwrap();
 
-    // 从请求中获取分页参数
-    let page = req.query::<u64>("page").unwrap_or(1);
-    let page_size = req.query::<u64>("page_size").unwrap_or(49);
     // 调用service处理
-    match sys_resource_service::get_resours_of_language(language.to_string(), page, page_size).await
-    {
+    match sys_resource_service::get_resours_of_language(language, page, page_size).await {
         Ok(result) => AppWriter(Ok(result)),
         Err(err) => AppWriter(Err(err)),
     }

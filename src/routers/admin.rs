@@ -32,7 +32,7 @@ pub fn api() -> Router {
         Router::with_path("comm")
             .push(Router::with_path("get_captcha").get(get_captcha))
             .push(Router::with_path("get_admin_bg").get(get_admin_bg))
-            .push(Router::with_path("login").get(post_login)),
+            .push(Router::with_path("login").post(post_login)),
         Router::with_path("system").push(
             Router::with_path("manager").push(
                 Router::with_path("website")
@@ -138,7 +138,8 @@ pub fn api() -> Router {
                 .append(&mut need_auth_router),
         );
     let doc = OpenApi::new("Resource Management API", "0.1.1").merge_router(&router);
+    println!("{:?}", doc);
     router
         .push(doc.into_router("/api-doc/openapi.json"))
-        .push(SwaggerUi::new("/api-doc/openapi.json").into_router("swagger-ui"))
+        .push(SwaggerUi::new("/system/api/api-doc/openapi.json").into_router("swagger-ui"))
 }
