@@ -49,7 +49,11 @@ async fn main() {
     match CFG.server.ssl {
         true => {
             println!(
-                "📖 Open API Page: https://{}/swagger-ui",
+                "📖 System Open API Page: https://{}/system/api/swagger-ui",
+                &CFG.server.address.replace("0.0.0.0", "127.0.0.1")
+            );
+            println!(
+                "📖 Custom Open API Page: https://{}/custom/api/swagger-ui",
                 &CFG.server.address.replace("0.0.0.0", "127.0.0.1")
             );
             let config = RustlsConfig::new(
@@ -72,7 +76,11 @@ async fn main() {
         }
         false => {
             println!(
-                "📖 Open API Page: http://{}/swagger-ui",
+                "📖 System Open API Page: https://{}/system/api/swagger-ui",
+                &CFG.server.address.replace("0.0.0.0", "127.0.0.1")
+            );
+            println!(
+                "📖 Custom Open API Page: https://{}/custom/api/swagger-ui",
                 &CFG.server.address.replace("0.0.0.0", "127.0.0.1")
             );
             let acceptor = TcpListener::new(&CFG.server.address).bind().await;
