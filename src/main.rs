@@ -48,6 +48,7 @@ async fn main() {
     let _cors_handler = cors_middleware();
     match CFG.server.ssl {
         true => {
+            println!("🔒 SSL is enabled");
             println!(
                 "📖 System Open API Page: https://{}/system/api/swagger-ui",
                 &CFG.server.address.replace("0.0.0.0", "127.0.0.1")
@@ -75,6 +76,7 @@ async fn main() {
             server.serve(service).await;
         }
         false => {
+            println!("🔓 SSL is disabled");
             println!(
                 "📖 System Open API Page: https://{}/system/api/swagger-ui",
                 &CFG.server.address.replace("0.0.0.0", "127.0.0.1")

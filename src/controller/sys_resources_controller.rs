@@ -1,7 +1,7 @@
 use crate::{
     app_writer::{AppWriter, ErrorResponseBuilder},
     dtos::{
-        query_struct::QueryParamsStruct,
+        query_struct::{QueryPageStruct, QueryParamsStruct},
         sys_resources_dto::{
             SysResourceChangeLink, SysResourceCreateRequest, SysResourceList, SysResourceResponse,
         },
@@ -59,65 +59,68 @@ pub async fn get_resource_detail_by_uuid(
     AppWriter(result)
 }
 
-#[endpoint(tags("根据类型和语言获取资源列表"))]
-pub async fn get_resources_of_category_and_language(
-    query: &mut Request,
-) -> AppWriter<Vec<SysResourceList>> {
-    // 从路径中获取language和category
-    let query_params: QueryParamsStruct = query.extract().await.unwrap();
-    let language = query_params.language.unwrap();
-    let category = query_params.category.unwrap();
-    let page = query_params.page.unwrap();
-    let page_size = query_params.page_size.unwrap();
-    // 调用service处理
-    match sys_resource_service::get_resources_by_category_and_language(
-        category, language, page, page_size,
-    )
-    .await
-    {
-        Ok(result) => AppWriter(Ok(result)),
-        Err(err) => AppWriter(Err(err)),
-    }
-}
+// #[endpoint(tags("根据类型和语言获取资源列表"))]
+// pub async fn get_resources_of_category_and_language(
+//     query: &mut Request,
+// ) -> AppWriter<Vec<SysResourceList>> {
+//     // 从路径中获取language和category
+//     let query_params: QueryParamsStruct = query.extract().await.unwrap();
+//     let language = query_params.language.unwrap();
+//     let category = query_params.category.unwrap();
+//     let page = query_params.page.unwrap();
+//     let page_size = query_params.page_size.unwrap();
+//     // 调用service处理
+//     match sys_resource_service::get_resources_by_category_and_language(
+//         category, language, page, page_size,
+//     )
+//     .await
+//     {
+//         Ok(result) => AppWriter(Ok(result)),
+//         Err(err) => AppWriter(Err(err)),
+//     }
+// }
 
-#[endpoint(tags("根据类型获取资源列表"))]
-pub async fn get_resources_of_category(req: &mut Request) -> AppWriter<Vec<SysResourceList>> {
-    // 从url中获取category和分页
-    let query_params: QueryParamsStruct = req.extract().await.unwrap();
-    let category = query_params.category.unwrap();
-    let page = query_params.page.unwrap();
-    let page_size = query_params.page_size.unwrap();
+// #[endpoint(tags("根据类型获取资源列表"))]
+// pub async fn get_resources_of_category(req: &mut Request) -> AppWriter<Vec<SysResourceList>> {
+//     // 从url中获取category和分页
+//     let query_params: QueryParamsStruct = req.extract().await.unwrap();
+//     let category = query_params.category.unwrap();
+//     let page = query_params.page.unwrap();
+//     let page_size = query_params.page_size.unwrap();
 
-    // 调用service处理
-    match sys_resource_service::get_resources_of_category(category, page, page_size).await {
-        Ok(result) => AppWriter(Ok(result)),
-        Err(err) => AppWriter(Err(err)),
-    }
-}
+//     // 调用service处理
+//     match sys_resource_service::get_resources_of_category(category, page, page_size).await {
+//         Ok(result) => AppWriter(Ok(result)),
+//         Err(err) => AppWriter(Err(err)),
+//     }
+// }
 
-#[endpoint(tags("根据语言获取资源列表"))]
-pub async fn get_resource_list_of_language(
-    query_param: &mut Request,
-) -> AppWriter<Vec<SysResourceList>> {
-    // 从url中获取language和分页
-    let get_params: QueryParamsStruct = query_param.extract().await.unwrap();
-    let language = get_params.language.unwrap();
-    let page = get_params.page.unwrap();
-    let page_size = get_params.page_size.unwrap();
+// #[endpoint(tags("根据语言获取资源列表"))]
+// pub async fn get_resource_list_of_language(
+//     query_param: &mut Request,
+// ) -> AppWriter<Vec<SysResourceList>> {
+//     // 从url中获取language和分页
+//     let get_params: QueryParamsStruct = query_param.extract().await.unwrap();
+//     let language = get_params.language.unwrap();
+//     let page = get_params.page.unwrap();
+//     let page_size = get_params.page_size.unwrap();
 
-    // 调用service处理
-    match sys_resource_service::get_resours_of_language(language, page, page_size).await {
-        Ok(result) => AppWriter(Ok(result)),
-        Err(err) => AppWriter(Err(err)),
-    }
-}
+//     // 调用service处理
+//     match sys_resource_service::get_resours_of_language(language, page, page_size).await {
+//         Ok(result) => AppWriter(Ok(result)),
+//         Err(err) => AppWriter(Err(err)),
+//     }
+// }
 
 #[endpoint(tags("获取资源列表"))]
-pub async fn get_resource_list(req: &mut Request) -> AppWriter<Vec<SysResourceList>> {
+pub async fn get_resource_list(
+    query_parament: &mut Request,
+    pageNum: JsonBody<QueryPageStruct>,
+) -> AppWriter<Vec<_>> {
     // 从请求中获取分页参数
-    let query_params: QueryParamsStruct = req.extract().await.unwrap();
-    let page = query_params.page.unwrap();
-    let page_size = query_params.page_size.unwrap();
+    let query_params = query_parament.queries();
+    // let page = query_params.page.unwrap();
+    // let page_size = query_params.page_size.unwrap();
 
     // 调用service处理
     match sys_resource_service::get_resource_list(page, page_size).await {
