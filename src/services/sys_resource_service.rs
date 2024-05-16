@@ -1,8 +1,8 @@
 use crate::{
     app_writer::AppResult,
     dtos::sys_resources_dto::{
-            SysResourceChangeLink, SysResourceCreateRequest, SysResourceList, SysResourceResponse,
-        },
+        SysResourceChangeLink, SysResourceCreateRequest, SysResourceList, SysResourceResponse,
+    },
     entities::{
         custom_user,
         prelude::{CustomOrders, SysImage, SysResourceImages, SysResources, SysUser},
@@ -11,7 +11,7 @@ use crate::{
     utils::db::DB,
 };
 use chrono::Local;
-use sea_orm::{*};
+use sea_orm::*;
 use uuid::Uuid;
 
 pub async fn delete_image(image_uuid: String, user_uuid: String) -> AppResult<()> {
@@ -36,7 +36,7 @@ pub async fn delete_image(image_uuid: String, user_uuid: String) -> AppResult<()
 
 pub async fn get_resource_detail_by_uuid(
     resource_uuid: String,
-    user_uuid: String,
+    user_uuid: Option<String>,
     role: Option<u32>,
 ) -> AppResult<SysResourceResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
@@ -46,12 +46,6 @@ pub async fn get_resource_detail_by_uuid(
         .await?;
     // 获取资源的实体
     let resource_model = resource_detail.unwrap();
-    // 根据当前用户的uuid查询订单信息
-    let order_by_user = CustomOrders::find()
-        .filter(custom_user::Column::UserUuid.eq(user_uuid.clone()))
-        .filter(sys_resources::Column::ResourceUuid.eq(resource_uuid.clone()))
-        .all(db)
-        .await?;
     // 获取资源图片信息
     let resource_image_query = SysImage::find()
         .join_rev(
@@ -64,61 +58,69 @@ pub async fn get_resource_detail_by_uuid(
         .filter(sys_resource_images::Column::ResourceUuid.eq(resource_uuid.clone()))
         .all(db)
         .await?;
-    let description = if resource_model.description_file_path.is_none() {
-        None
-    } else {
-        resource_model.description.clone()
-    };
-    let description_file_path = if resource_model.description_file_path.is_none() {
-        None
-    } else {
-        resource_model.description_file_path.clone()
-    };
-    let mut srr_img = Vec::new();
-    for item in resource_image_query.clone() {
-        let resource_image_path = item.image_path.clone();
-        srr_img.push(resource_image_path)
-    }
-    // 判断role是否为空
-    if role.is_none() {
-        // 判断用户是否购买资源
-        if !order_by_user.is_empty() {
-            let order_detail = order_by_user[0].clone();
-            let resource_link = &order_detail.download_link.clone();
-
-            // 构建 SysResourceResponse 结构体实例并返回
-            return Ok(SysResourceResponse {
-                resource_uuid: resource_model.resource_uuid,
-                resource_name: resource_model.resource_name,
-                description,
-                description_file_path,
-                resource_price: resource_model.resource_price,
-                category: resource_model.category,
-                language: resource_model.language,
-                resource_link: resource_link.clone(),
-                create_user_name: resource_model.create_user_name,
-                resource_image: srr_img,
-            });
-        }
-    } else {
-        // 判断当前用户是否在管理员表中
-        let admin_by_user = SysUser::find_by_id(user_uuid.clone()).one(db).await?;
-        if admin_by_user.is_some() {
-            // 返回完整的资源详情
-            return Ok(SysResourceResponse {
-                resource_uuid: resource_model.resource_uuid,
-                resource_name: resource_model.resource_name,
-                description,
-                description_file_path,
-                resource_price: resource_model.resource_price,
-                category: resource_model.category,
-                language: resource_model.language,
-                resource_link: resource_model.resource_link,
-                create_user_name: resource_model.create_user_name,
-                resource_image: srr_img,
-            });
+     let description = if resource_model.description_file_path.is_none() {
+            None
         } else {
-            return Err(anyhow::anyhow!("token被篡改，请重新登录").into());
+            resource_model.description.clone()
+        };
+        let description_file_path = if resource_model.description_file_path.is_none() {
+            None
+        } else {
+            resource_model.description_file_path.clone()
+        };
+        let mut srr_img = Vec::new();
+        for item in resource_image_query.clone() {
+            let resource_image_path = item.image_path.clone();
+            srr_img.push(resource_image_path)
+        }
+    if user_uuid.is_some() {
+        // 根据当前用户的uuid查询订单信息
+        let order_by_user = CustomOrders::find()
+            .filter(custom_user::Column::UserUuid.eq(user_uuid.clone().unwrap()))
+            .filter(sys_resources::Column::ResourceUuid.eq(resource_uuid.clone()))
+            .all(db)
+            .await?;
+        // 判断role是否为空
+        if role.is_none() {
+            // 判断用户是否购买资源
+            if !order_by_user.is_empty() {
+                let order_detail = order_by_user[0].clone();
+                let resource_link = &order_detail.download_link.clone();
+
+                // 构建 SysResourceResponse 结构体实例并返回
+                return Ok(SysResourceResponse {
+                    resource_uuid: resource_model.resource_uuid,
+                    resource_name: resource_model.resource_name,
+                    description,
+                    description_file_path,
+                    resource_price: resource_model.resource_price,
+                    category: resource_model.category,
+                    language: resource_model.language,
+                    resource_link: resource_link.clone(),
+                    create_user_name: resource_model.create_user_name,
+                    resource_image: srr_img,
+                });
+            }
+        } else {
+            // 判断当前用户是否在管理员表中
+            let admin_by_user = SysUser::find_by_id(user_uuid.unwrap()).one(db).await?;
+            if admin_by_user.is_some() {
+                // 返回完整的资源详情
+                return Ok(SysResourceResponse {
+                    resource_uuid: resource_model.resource_uuid,
+                    resource_name: resource_model.resource_name,
+                    description,
+                    description_file_path,
+                    resource_price: resource_model.resource_price,
+                    category: resource_model.category,
+                    language: resource_model.language,
+                    resource_link: resource_model.resource_link,
+                    create_user_name: resource_model.create_user_name,
+                    resource_image: srr_img,
+                });
+            } else {
+                return Err(anyhow::anyhow!("token被篡改，请重新登录").into());
+            }
         }
     }
 

@@ -1,6 +1,4 @@
-use salvo::{
-    prelude::{Extractible, ToSchema},
-};
+use salvo::prelude::{Extractible, ToSchema};
 use sea_orm::prelude::Decimal;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -25,8 +23,8 @@ pub struct ChangePwdRequest {
 #[salvo(schema(rename_all = "camelCase"))]
 #[serde(rename_all = "camelCase")]
 pub struct BuyResourcetRequest {
-    pub resource_uuid: String,
-    pub create_user_name: String,
+    // pub resource_uuid: String,
+    pub auth_name: String,
 }
 
 #[derive(Deserialize, Debug, Validate, ToSchema, Default)]

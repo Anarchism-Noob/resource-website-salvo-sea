@@ -3,9 +3,9 @@ use crate::{
     dtos::{
         custom_orders_dto::CustomOrderResponse,
         custom_user_dto::{
-            BuyResourcetRequest, ChangePwdRequest, ChangeUserProfileRequest,
-            CustomUserLoginRequest, CustomUserLoginResponse, CustomUserProfileResponse,
-            CustomUserRegisterRequest, CustomUserResponse,
+            ChangePwdRequest, ChangeUserProfileRequest, CustomUserLoginRequest,
+            CustomUserLoginResponse, CustomUserProfileResponse, CustomUserRegisterRequest,
+            CustomUserResponse,
         },
     },
     entities::{
@@ -122,8 +122,9 @@ pub async fn get_user_profile(user_uuid: String) -> AppResult<CustomUserProfileR
 }
 
 pub async fn buy_resource_request(
-    req: BuyResourcetRequest,
-    uuid: String,
+    resource_uuid: String,
+    auth_name: String,
+    token_uuid: String,
 ) -> AppResult<CustomOrderResponse> {
     let db = DB.get().ok_or(anyhow::anyhow!("数据库连接失败"))?;
     // 查看该用户是否购买过对应资源
@@ -135,8 +136,8 @@ pub async fn buy_resource_request(
                 .to(custom_orders::Column::UserUuid)
                 .into(),
         )
-        .filter(custom_user::Column::UserUuid.eq(uuid.clone()))
-        .filter(custom_orders::Column::ResourceUuid.eq(req.resource_uuid.clone()))
+        .filter(custom_user::Column::UserUuid.eq(token_uuid.clone()))
+        .filter(custom_orders::Column::ResourceUuid.eq(resource_uuid.clone()))
         .all(db)
         .await
         .unwrap();
@@ -145,12 +146,12 @@ pub async fn buy_resource_request(
     }
     // 查询资源信息
     let resource_result = SysResources::find()
-        .filter(sys_resources::Column::ResourceUuid.eq(req.resource_uuid.clone()))
+        .filter(sys_resources::Column::ResourceUuid.eq(resource_uuid.clone()))
         .one(db)
         .await?;
     // 查询用户信息
     let user_result = CustomUser::find()
-        .filter(custom_user::Column::UserUuid.eq(uuid.clone()))
+        .filter(custom_user::Column::UserUuid.eq(token_uuid.clone()))
         .one(db)
         .await?;
     let user_model = user_result.clone().unwrap();
@@ -184,7 +185,7 @@ pub async fn buy_resource_request(
 
     // 添加管理员余额记录
     let admin_user = SysUser::find()
-        .filter(sys_user::Column::UserName.eq(req.create_user_name))
+        .filter(sys_user::Column::UserName.eq(auth_name))
         .one(db)
         .await?;
     let admin_balance = admin_user.clone().unwrap().balance + resource_model.resource_price;

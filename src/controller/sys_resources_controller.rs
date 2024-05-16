@@ -38,13 +38,11 @@ pub async fn delete_image(req: PathParam<String>, depot: &mut Depot) -> AppWrite
 
 #[endpoint(tags("根据uuid获取资源详情"))]
 pub async fn get_resource_detail_by_uuid(
-    req: &mut Request,
+    resource_uuid: PathParam<String>,
     depot: &mut Depot,
 ) -> AppWriter<SysResourceResponse> {
-    // 从url获取uuid
-    let query_params: QueryParamsStruct = req.extract().await.unwrap();
-    let resource_uuid = query_params.resource_uuid.unwrap();
-    // let resource_uuid = req.query::<String>("resource").unwrap();
+    // 从url获取resource_uuid
+    let resource_uuid = resource_uuid.into_inner();
 
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
@@ -55,77 +53,59 @@ pub async fn get_resource_detail_by_uuid(
     let uuid = jwt_model.user_id;
     let role: Option<u32> = jwt_model.role;
 
-    let result = sys_resource_service::get_resource_detail_by_uuid(resource_uuid, uuid, role).await;
+    let result =
+        sys_resource_service::get_resource_detail_by_uuid(resource_uuid, Some(uuid), role).await;
     AppWriter(result)
 }
 
-// #[endpoint(tags("根据类型和语言获取资源列表"))]
-// pub async fn get_resources_of_category_and_language(
-//     query: &mut Request,
-// ) -> AppWriter<Vec<SysResourceList>> {
-//     // 从路径中获取language和category
-//     let query_params: QueryParamsStruct = query.extract().await.unwrap();
-//     let language = query_params.language.unwrap();
-//     let category = query_params.category.unwrap();
-//     let page = query_params.page.unwrap();
-//     let page_size = query_params.page_size.unwrap();
-//     // 调用service处理
-//     match sys_resource_service::get_resources_by_category_and_language(
-//         category, language, page, page_size,
-//     )
-//     .await
-//     {
-//         Ok(result) => AppWriter(Ok(result)),
-//         Err(err) => AppWriter(Err(err)),
-//     }
-// }
-
-// #[endpoint(tags("根据类型获取资源列表"))]
-// pub async fn get_resources_of_category(req: &mut Request) -> AppWriter<Vec<SysResourceList>> {
-//     // 从url中获取category和分页
-//     let query_params: QueryParamsStruct = req.extract().await.unwrap();
-//     let category = query_params.category.unwrap();
-//     let page = query_params.page.unwrap();
-//     let page_size = query_params.page_size.unwrap();
-
-//     // 调用service处理
-//     match sys_resource_service::get_resources_of_category(category, page, page_size).await {
-//         Ok(result) => AppWriter(Ok(result)),
-//         Err(err) => AppWriter(Err(err)),
-//     }
-// }
-
-// #[endpoint(tags("根据语言获取资源列表"))]
-// pub async fn get_resource_list_of_language(
-//     query_param: &mut Request,
-// ) -> AppWriter<Vec<SysResourceList>> {
-//     // 从url中获取language和分页
-//     let get_params: QueryParamsStruct = query_param.extract().await.unwrap();
-//     let language = get_params.language.unwrap();
-//     let page = get_params.page.unwrap();
-//     let page_size = get_params.page_size.unwrap();
-
-//     // 调用service处理
-//     match sys_resource_service::get_resours_of_language(language, page, page_size).await {
-//         Ok(result) => AppWriter(Ok(result)),
-//         Err(err) => AppWriter(Err(err)),
-//     }
-// }
-
-#[endpoint(tags("获取资源列表"))]
+#[endpoint(tags("根据QueryParams获取资源列表"))]
 pub async fn get_resource_list(
-    query_parament: &mut Request,
-    pageNum: JsonBody<QueryPageStruct>,
-) -> AppWriter<Vec<_>> {
+    query_parament: QueryParamsStruct,
+    page_s: JsonBody<QueryPageStruct>,
+) -> AppWriter<Vec<SysResourceList>> {
     // 从请求中获取分页参数
-    let query_params = query_parament.queries();
-    // let page = query_params.page.unwrap();
-    // let page_size = query_params.page_size.unwrap();
-
-    // 调用service处理
-    match sys_resource_service::get_resource_list(page, page_size).await {
-        Ok(result) => AppWriter(Ok(result)),
-        Err(err) => AppWriter(Err(err)),
+    // let query_params: QueryParamsStruct = query_parament;
+    let language = query_parament.language;
+    let category = query_parament.category;
+    let page = page_s.0.page.unwrap_or_default();
+    let page_size = page_s.0.page_size.unwrap_or_default();
+    // 若同时存在
+    if language.is_some() && category.is_some() {
+        match sys_resource_service::get_resources_by_category_and_language(
+            category.unwrap(),
+            language.unwrap(),
+            page,
+            page_size,
+        )
+        .await
+        {
+            Ok(result) => AppWriter(Ok(result)),
+            Err(err) => AppWriter(Err(err)),
+        }
+    } else
+    // 若存在category
+    if category.is_some() {
+        match sys_resource_service::get_resources_of_category(category.unwrap(), page, page_size)
+            .await
+        {
+            Ok(result) => AppWriter(Ok(result)),
+            Err(err) => AppWriter(Err(err)),
+        }
+    } else
+    // 若存在language
+    if language.is_some() {
+        match sys_resource_service::get_resours_of_language(language.unwrap(), page, page_size)
+            .await
+        {
+            Ok(result) => AppWriter(Ok(result)),
+            Err(err) => AppWriter(Err(err)),
+        }
+    } else {
+        // 返回默认列表
+        match sys_resource_service::get_resource_list(page, page_size).await {
+            Ok(result) => AppWriter(Ok(result)),
+            Err(err) => AppWriter(Err(err)),
+        }
     }
 }
 
@@ -136,7 +116,7 @@ pub async fn put_change_link(form_data: JsonBody<SysResourceChangeLink>, res: &m
     if let Err(_err) = sys_resource_service::change_resource_link(cloned_form_data).await {
         res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
     }
-    res.render(Json(format!("改资源的下载链接已更改为{}", resource_link)));
+    res.render(Json(format!("改资源的下载链接已更改为：{}", resource_link)));
 }
 
 #[endpoint(tags("新建源码包"))]

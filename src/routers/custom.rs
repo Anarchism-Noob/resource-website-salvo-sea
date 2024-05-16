@@ -18,7 +18,7 @@ pub fn api() -> Router {
             // 用户登陆
             .push(
                 Router::with_path("login")
-                    .push(Router::with_path("<captchaType>").get(get_captcha))
+                    .get(get_captcha)
                     .push(Router::with_path("get_login_bg").get(get_custom_bg))
                     .push(Router::with_path("loading").post(post_login)),
             )
@@ -27,7 +27,7 @@ pub fn api() -> Router {
             .push(
                 // 用户注册
                 Router::with_path("register")
-                    .push(Router::with_path("<captchaType>").get(get_captcha))
+                    .get(get_captcha)
                     .push(Router::with_path("create").post(post_register)),
             ),
         // 首页
@@ -56,8 +56,8 @@ pub fn api() -> Router {
             Router::with_path("profile")
                 .push(Router::with_path("view/<uuid>").get(get_user_profile))
                 .push(Router::with_path("change_pwd/<uuid>").put(put_change_password))
-                .push(Router::with_path("change_profile/<uuid>").put(put_change_profile))
-                .push(Router::with_path("orders/<uuid>").get(get_orders))
+                .push(Router::with_path("change_profile").put(put_change_profile))
+                .push(Router::with_path("orders").get(get_orders))
                 .push(Router::with_path("avatar").put(put_upload_avatar)),
         )
         .push(Router::with_path("resource/<uuid>").put(put_buy_resource))];

@@ -2,10 +2,11 @@ use crate::{
     dtos::{
         custom_orders_dto::CustomOrderResponse,
         custom_user_dto::{
-            BuyResourcetRequest, ChangePwdRequest, ChangeUserProfileRequest,
-            CustomUserLoginRequest, CustomUserLoginResponse, CustomUserProfileResponse,
-            CustomUserRegisterRequest, CustomUserResponse,
+            ChangePwdRequest, ChangeUserProfileRequest, CustomUserLoginRequest,
+            CustomUserLoginResponse, CustomUserProfileResponse, CustomUserRegisterRequest,
+            CustomUserResponse,
         },
+        query_struct::QueryParamsStruct,
     },
     middleware::*,
     services::custom_user_service,
@@ -17,7 +18,10 @@ use crate::{
 };
 use salvo::{
     http::{cookie::Cookie, StatusCode},
-    oapi::{endpoint, extract::JsonBody},
+    oapi::{
+        endpoint,
+        extract::{JsonBody, QueryParam},
+    },
     prelude::Json,
     Depot, Request, Response, Writer,
 };
@@ -41,7 +45,8 @@ pub async fn get_orders(depot: &mut Depot) -> AppWriter<Vec<CustomOrderResponse>
 
 #[endpoint{tags ("购买资源"), }]
 pub async fn put_buy_resource(
-    form_data: JsonBody<BuyResourcetRequest>,
+    query_param: QueryParamsStruct,
+    form_data: JsonBody<String>,
     depot: &mut Depot,
 ) -> AppWriter<CustomOrderResponse> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
@@ -53,8 +58,15 @@ pub async fn put_buy_resource(
     let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
-    let model = form_data.0;
-    let result = custom_user_service::buy_resource_request(model, uuid).await;
+    let auth_name = form_data.0.clone();
+    let resource_uuid = query_param.resource_uuid;
+    let resource = match resource_uuid {
+        Some(uuid) => uuid,
+        None => {
+            return AppError::AnyHow(anyhow::anyhow!("资源uuid不能为空")).into();
+        }
+    };
+    let result = custom_user_service::buy_resource_request(resource, auth_name, uuid).await;
     AppWriter(result)
 }
 
@@ -144,9 +156,9 @@ pub async fn put_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut R
 }
 
 #[endpoint(tags("获取验证码"))]
-pub async fn get_captcha(req: &mut Request, res: &mut Response) {
+pub async fn get_captcha(req: QueryParam<String, true>, res: &mut Response) {
     // 从查询参数中获取验证码类型
-    let captcha_type = req.query::<String>("captchaType").unwrap_or_default();
+    let captcha_type = req.into_inner();
     // 生成验证码
     let captcha_result: AppResult<CaptchaImage> = generate_captcha(&captcha_type).await;
     match captcha_result {
