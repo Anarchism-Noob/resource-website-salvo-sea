@@ -10,7 +10,7 @@ use crate::{
 use salvo::{
     oapi::{
         endpoint,
-        extract::PathParam,
+        extract::{JsonBody, PathParam},
     },
     Depot, Writer,
 };
@@ -22,7 +22,7 @@ pub async fn get_dev_languages() -> AppWriter<Vec<QueryLanguageResponse>> {
 }
 
 #[endpoint(tags("新增开发语言项"))]
-pub async fn post_create_language(req: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn post_create_language(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<()> {
     // 获取token
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用

@@ -50,7 +50,9 @@ pub async fn put_withdraw_process(req: JsonBody<String>, depot: &mut Depot) -> A
     }
     let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
-    let _result = admin_user_service::post_withdraw_process(req.0, uuid).await;
+
+    let withdraw_uuid = req.0;
+    let _result = admin_user_service::post_withdraw_process(withdraw_uuid, uuid).await;
     AppWriter(_result)
 }
 

@@ -5,7 +5,10 @@ use crate::{
     utils::{app_error::AppError, app_writer::AppWriter},
 };
 use salvo::{
-    oapi::{endpoint, extract::PathParam},
+    oapi::{
+        endpoint,
+        extract::{JsonBody, PathParam},
+    },
     Depot, Writer,
 };
 
@@ -16,7 +19,7 @@ pub async fn get_category_list() -> AppWriter<Vec<QueryCategoryResponse>> {
 }
 
 #[endpoint(tags("创建资源分类"))]
-pub async fn create_category(req: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn create_category(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<()> {
     // 获取token
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用
