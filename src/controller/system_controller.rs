@@ -20,7 +20,7 @@ use salvo::{
     http::{cookie::Cookie, StatusCode},
     oapi::{
         endpoint,
-        extract::{JsonBody, PathParam},
+        extract::{JsonBody, PathParam, QueryParam},
     },
     prelude::*,
     Request, Response, Writer,
@@ -306,10 +306,10 @@ pub async fn put_change_password(
 }
 
 #[endpoint(tags("获取验证码"))]
-pub async fn get_captcha(req: &mut Request, res: &mut Response) {
+pub async fn get_captcha(req: QueryParam<String, true>, res: &mut Response) {
+    let captcha_type = req.into_inner();
     // 生成验证码
-    let captcha_result: AppResult<CaptchaImage> =
-        generate_captcha(&req.param::<String>("captchaType").unwrap_or_default()).await;
+    let captcha_result: AppResult<CaptchaImage> = generate_captcha(captcha_type.as_str()).await;
     match captcha_result {
         Ok(captcha) => {
             res.render(Json(captcha));

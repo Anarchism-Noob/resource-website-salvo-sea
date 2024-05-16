@@ -5,27 +5,27 @@ use serde::{Deserialize, Serialize};
 pub struct QueryParamsStruct {
     #[salvo(parameters(
         parameter_in = Path, 
-        require = false
+        required = false
     ))]
     pub resource_uuid: Option<String>,
-    #[salvo(parameters(
-        parameter_in = Path, 
-        require = false
-    ))]
-    pub user_uuid: Option<String>,
-    #[salvo(parameters(
-        parameter_in = Path, 
-        require = false
-    ))]
-    pub id: Option<i32>,
+    // #[salvo(parameters(
+    //     parameter_in = Path, 
+    //     require = false
+    // ))]
+    // pub user_uuid: Option<String>,
+    // #[salvo(parameters(
+    //     parameter_in = Path, 
+    //     require = false
+    // ))]
+    // pub id: Option<i32>,
     #[salvo(parameters(
         parameter_in = Query, 
-        require = false
+        required = false
     ))]
     pub language: Option<String>,
     #[salvo(parameters(
         parameter_in = Query, 
-        require = false
+        required = false
     ))]
     pub category: Option<String>,
     // #[salvo(extract(source(from = "body")))]
