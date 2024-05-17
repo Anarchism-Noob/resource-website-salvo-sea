@@ -1,16 +1,16 @@
 use crate::{
-    dtos::sys_language_dto::QueryLanguageResponse,
+    dtos::{
+        query_struct::{BodyStructCreateLanguage, DeleteId},
+        sys_language_dto::QueryLanguageResponse,
+    },
     middleware::*,
     services::resource_language_service,
-    utils::{
-        app_error::AppError,
-        app_writer::AppWriter,
-    },
+    utils::{app_error::AppError, app_writer::AppWriter},
 };
 use salvo::{
     oapi::{
         endpoint,
-        extract::{JsonBody, PathParam},
+        extract::JsonBody,
     },
     Depot, Writer,
 };
@@ -22,7 +22,10 @@ pub async fn get_dev_languages() -> AppWriter<Vec<QueryLanguageResponse>> {
 }
 
 #[endpoint(tags("新增开发语言项"))]
-pub async fn post_create_language(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn post_create_language(
+    req: JsonBody<BodyStructCreateLanguage>,
+    depot: &mut Depot,
+) -> AppWriter<()> {
     // 获取token
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用
@@ -34,13 +37,13 @@ pub async fn post_create_language(req: JsonBody<String>, depot: &mut Depot) -> A
 
     // 获取用户id
     let user_id = jwt_model.user_id;
-
-    let _redult = resource_language_service::create_language(req.0, user_id).await;
+    let language = req.0.language.clone();
+    let _redult = resource_language_service::create_language(language.unwrap(), user_id).await;
     AppWriter(_redult)
 }
 
 #[endpoint(tags("删除开发语言项"))]
-pub async fn delete_language(req: PathParam<i32>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn delete_language(del: JsonBody<DeleteId>, depot: &mut Depot) -> AppWriter<()> {
     // 获取token
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用
@@ -52,7 +55,8 @@ pub async fn delete_language(req: PathParam<i32>, depot: &mut Depot) -> AppWrite
 
     // 获取用户id
     let user_id = jwt_model.user_id;
+    let language_id = del.0.c_l_id.clone();
 
-    let _redult = resource_language_service::del_language(req.0, user_id).await;
+    let _redult = resource_language_service::del_language(language_id.unwrap(), user_id).await;
     AppWriter(_redult)
 }

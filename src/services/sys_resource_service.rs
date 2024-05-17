@@ -1,8 +1,6 @@
 use crate::{
     app_writer::AppResult,
-    dtos::sys_resources_dto::{
-        SysResourceChangeLink, SysResourceCreateRequest, SysResourceList, SysResourceResponse,
-    },
+    dtos::sys_resources_dto::{SysResourceCreateRequest, SysResourceList, SysResourceResponse},
     entities::{
         custom_user,
         prelude::{CustomOrders, SysImage, SysResourceImages, SysResources, SysUser},
@@ -58,21 +56,21 @@ pub async fn get_resource_detail_by_uuid(
         .filter(sys_resource_images::Column::ResourceUuid.eq(resource_uuid.clone()))
         .all(db)
         .await?;
-     let description = if resource_model.description_file_path.is_none() {
-            None
-        } else {
-            resource_model.description.clone()
-        };
-        let description_file_path = if resource_model.description_file_path.is_none() {
-            None
-        } else {
-            resource_model.description_file_path.clone()
-        };
-        let mut srr_img = Vec::new();
-        for item in resource_image_query.clone() {
-            let resource_image_path = item.image_path.clone();
-            srr_img.push(resource_image_path)
-        }
+    let description = if resource_model.description_file_path.is_none() {
+        None
+    } else {
+        resource_model.description.clone()
+    };
+    let description_file_path = if resource_model.description_file_path.is_none() {
+        None
+    } else {
+        resource_model.description_file_path.clone()
+    };
+    let mut srr_img = Vec::new();
+    for item in resource_image_query.clone() {
+        let resource_image_path = item.image_path.clone();
+        srr_img.push(resource_image_path)
+    }
     if user_uuid.is_some() {
         // 根据当前用户的uuid查询订单信息
         let order_by_user = CustomOrders::find()
@@ -303,14 +301,23 @@ pub async fn get_resource_list(page_no: u64, page_size: u64) -> AppResult<Vec<Sy
     Ok(srr)
 }
 
-pub async fn change_resource_link(form_data: SysResourceChangeLink) -> AppResult<()> {
+pub async fn change_resource_link(
+    new_link: String,
+    resource_uuid: String,
+    uuid: String,
+) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
-    let model = sys_resources::Entity::find_by_id(form_data.resource_uuid.clone())
+    let user = SysUser::find_by_id(uuid).one(db).await?;
+    if user.is_none() {
+        return Err(anyhow::anyhow!("没有相关权限，请联系管理员").into());
+    }
+    let model = sys_resources::Entity::find_by_id(resource_uuid.clone())
         .one(db)
         .await?;
     let mut model_res: sys_resources::ActiveModel = model.unwrap().into();
-    model_res.resource_link = Set(form_data.resource_link.clone());
+    model_res.resource_link = Set(new_link.clone());
     model_res.update(db).await?;
+
     Ok(())
 }
 

@@ -1,5 +1,8 @@
 use crate::{
-    dtos::sys_category_dto::QueryCategoryResponse,
+    dtos::{
+        query_struct::{BodyStructCreateCategory, DeleteId},
+        sys_category_dto::QueryCategoryResponse,
+    },
     middleware::*,
     services::resource_category_service,
     utils::{app_error::AppError, app_writer::AppWriter},
@@ -7,7 +10,7 @@ use crate::{
 use salvo::{
     oapi::{
         endpoint,
-        extract::{JsonBody, PathParam},
+        extract::JsonBody,
     },
     Depot, Writer,
 };
@@ -19,7 +22,10 @@ pub async fn get_category_list() -> AppWriter<Vec<QueryCategoryResponse>> {
 }
 
 #[endpoint(tags("创建资源分类"))]
-pub async fn create_category(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn create_category(
+    req: JsonBody<BodyStructCreateCategory>,
+    depot: &mut Depot,
+) -> AppWriter<()> {
     // 获取token
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用
@@ -31,13 +37,14 @@ pub async fn create_category(req: JsonBody<String>, depot: &mut Depot) -> AppWri
 
     // 获取用户id
     let user_id = jwt_model.user_id;
+    let category = req.0.category.clone();
 
-    let _result = resource_category_service::create_category(req.0, user_id).await;
+    let _result = resource_category_service::create_category(category.unwrap(), user_id).await;
     AppWriter(_result)
 }
 
 #[endpoint(tags("删除资源分类"))]
-pub async fn delete_category(req: PathParam<u32>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn delete_category(del: JsonBody<DeleteId>, depot: &mut Depot) -> AppWriter<()> {
     // 获取token
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
     //判断token是否可用
@@ -49,8 +56,8 @@ pub async fn delete_category(req: PathParam<u32>, depot: &mut Depot) -> AppWrite
 
     // 获取用户id
     let user_id = jwt_model.user_id;
-    let category = req.0.try_into().unwrap();
+    let category_id = del.0.c_l_id.clone();
 
-    let _result = resource_category_service::delete_category(category, user_id).await;
+    let _result = resource_category_service::delete_category(category_id.unwrap(), user_id).await;
     AppWriter(_result)
 }

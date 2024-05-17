@@ -3,13 +3,14 @@ use crate::{
     dtos::{
         count_data_dto::CountDataResponse,
         custom_user_dto::{CustomUserProfileResponse, RechargeOfAdminRequest},
+        query_struct::BodyStructOfDE,
         sys_user_dto::{
             ChangeAdminProfileRequest, ChangeAdminPwdRequest, SysLoginRequest, SysLoginResponse,
             SysUserCrateRequest, SysUserProfileResponse,
         },
         withdrawals_dto::WithdrawalsResponse,
     },
-    middleware::jwt::{self},
+    middleware::jwt,
     services::admin_user_service,
     utils::{
         app_error::AppError,
@@ -20,7 +21,7 @@ use salvo::{
     http::{cookie::Cookie, StatusCode},
     oapi::{
         endpoint,
-        extract::{JsonBody, PathParam, QueryParam},
+        extract::{JsonBody, QueryParam},
     },
     prelude::*,
     Request, Response, Writer,
@@ -114,7 +115,7 @@ pub async fn put_recharge(
 }
 
 #[endpoint(tags("禁用admin账号"))]
-pub async fn disable_admin(admin_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn disable_admin(admin_uuid: JsonBody<BodyStructOfDE>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -122,12 +123,14 @@ pub async fn disable_admin(admin_uuid: PathParam<String>, depot: &mut Depot) -> 
     }
     let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
-    let _result = admin_user_service::disable_admin_user(admin_uuid.0, uuid).await;
+    // 获取被禁用账号的uuid
+    let disable_uuid = admin_uuid.d_e_uuid.clone();
+    let _result = admin_user_service::disable_admin_user(disable_uuid.unwrap(), uuid).await;
     AppWriter(_result)
 }
 
 #[endpoint(tags("启用admin账号"))]
-pub async fn enable_admin(admin_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn enable_admin(admin_uuid: JsonBody<BodyStructOfDE>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -135,12 +138,15 @@ pub async fn enable_admin(admin_uuid: PathParam<String>, depot: &mut Depot) -> A
     }
     let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
-    let _result = admin_user_service::enable_admin_user(admin_uuid.0, uuid).await;
+    // 获取被启用用账号的uuid
+    let enable_uuid = admin_uuid.d_e_uuid.clone();
+
+    let _result = admin_user_service::enable_admin_user(enable_uuid.unwrap(), uuid).await;
     AppWriter(_result)
 }
 
 #[endpoint(tags("禁用custom账号"))]
-pub async fn disable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn disable_custom(custom_uuid: JsonBody<BodyStructOfDE>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -149,12 +155,14 @@ pub async fn disable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) -
 
     let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
-    let _result = admin_user_service::disable_custom_user(custom_uuid.0, uuid).await;
+    let disable_uuid = custom_uuid.d_e_uuid.clone();
+
+    let _result = admin_user_service::disable_custom_user(disable_uuid.unwrap(), uuid).await;
     AppWriter(_result)
 }
 
 #[endpoint(tags("启用custom账号"))]
-pub async fn enable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn enable_custom(custom_uuid: JsonBody<BodyStructOfDE>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -162,7 +170,9 @@ pub async fn enable_custom(custom_uuid: PathParam<String>, depot: &mut Depot) ->
     }
     let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
-    let _result = admin_user_service::enable_custom_user(custom_uuid.0, uuid).await;
+    let enable_uuid = custom_uuid.d_e_uuid.clone();
+
+    let _result = admin_user_service::enable_custom_user(enable_uuid.unwrap(), uuid).await;
     AppWriter(_result)
 }
 
@@ -306,8 +316,8 @@ pub async fn put_change_password(
 }
 
 #[endpoint(tags("获取验证码"))]
-pub async fn get_captcha(req: QueryParam<String, true>, res: &mut Response) {
-    let captcha_type = req.into_inner();
+pub async fn get_captcha(captcha_type: QueryParam<String, true>, res: &mut Response) {
+    let captcha_type = captcha_type.into_inner();
     // 生成验证码
     let captcha_result: AppResult<CaptchaImage> = generate_captcha(captcha_type.as_str()).await;
     match captcha_result {

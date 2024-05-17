@@ -1,5 +1,8 @@
 use crate::{
-    dtos::sys_carousel_dto::{CreateCarouselRequest, QueryCarouselResponse},
+    dtos::{
+        query_struct::DeleteUuid,
+        sys_carousel_dto::{CreateCarouselRequest, QueryCarouselResponse},
+    },
     middleware::*,
     services::sys_carousel_service,
     utils::{
@@ -9,10 +12,7 @@ use crate::{
 };
 use salvo::{
     http::StatusCode,
-    oapi::{
-        endpoint,
-        extract::{JsonBody, PathParam},
-    },
+    oapi::{endpoint, extract::JsonBody},
     prelude::Json,
     Depot, Request, Response, Writer,
 };
@@ -20,16 +20,16 @@ use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
 #[endpoint(tags("删除轮播图"))]
-pub async fn delete_carousel(img_uuid: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn delete_carousel(img_uuid: JsonBody<DeleteUuid>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
     }
     let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
-    let image = img_uuid.0;
-    let _result = sys_carousel_service::delete_carousel(image, uuid).await;
+    let token_uuid = jwt_model.user_id;
+    let image = img_uuid.0.img_uuid;
+    let _result = sys_carousel_service::delete_carousel(image.unwrap(), token_uuid).await;
     AppWriter(_result)
 }
 

@@ -6,7 +6,7 @@ use crate::{
             CustomUserLoginResponse, CustomUserProfileResponse, CustomUserRegisterRequest,
             CustomUserResponse,
         },
-        query_struct::QueryParamsStruct,
+        query_struct::PathFilterStruct,
     },
     middleware::*,
     services::custom_user_service,
@@ -45,7 +45,7 @@ pub async fn get_orders(depot: &mut Depot) -> AppWriter<Vec<CustomOrderResponse>
 
 #[endpoint{tags ("购买资源"), }]
 pub async fn put_buy_resource(
-    query_param: QueryParamsStruct,
+    query_param: PathFilterStruct,
     form_data: JsonBody<String>,
     depot: &mut Depot,
 ) -> AppWriter<CustomOrderResponse> {
@@ -59,7 +59,7 @@ pub async fn put_buy_resource(
     let uuid = jwt_model.user_id;
 
     let auth_name = form_data.0.clone();
-    let resource_uuid = query_param.resource_uuid;
+    let resource_uuid = query_param.resource;
     let resource = match resource_uuid {
         Some(uuid) => uuid,
         None => {
@@ -90,7 +90,7 @@ pub async fn put_change_profile(
 }
 
 // 获取用户详细信息
-#[endpoint(tags("获取用户详情"))]
+#[endpoint(tags("获取当前用户详情"))]
 pub async fn get_user_profile(depot: &mut Depot) -> AppWriter<CustomUserProfileResponse> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
@@ -201,9 +201,10 @@ pub async fn post_login(form_data: JsonBody<CustomUserLoginRequest>, res: &mut R
 }
 
 #[endpoint(tags("更改密码"),
-parameters(
-    ("user_uuid", description = "用户uuid"),
-))]
+// parameters(
+//     ("", description = "用户uuid"),
+// )
+)]
 pub async fn put_change_password(
     req: JsonBody<ChangePwdRequest>,
     depot: &mut Depot,

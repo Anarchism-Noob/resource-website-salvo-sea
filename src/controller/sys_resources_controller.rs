@@ -1,7 +1,7 @@
 use crate::{
     app_writer::{AppWriter, ErrorResponseBuilder},
     dtos::{
-        query_struct::{QueryPageStruct, QueryParamsStruct},
+        query_struct::{DeleteUuid, PathFilterStruct, QueryPageStruct, QueryParamsStruct},
         sys_resources_dto::{
             SysResourceChangeLink, SysResourceCreateRequest, SysResourceList, SysResourceResponse,
         },
@@ -14,7 +14,7 @@ use salvo::{
     http::StatusCode,
     oapi::{
         endpoint,
-        extract::{JsonBody, PathParam},
+        extract::JsonBody,
     },
     prelude::Json,
     Depot, Request, Response, Writer,
@@ -22,8 +22,8 @@ use salvo::{
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
-#[endpoint(tags("删除页面截图"))]
-pub async fn delete_image(req: PathParam<String>, depot: &mut Depot) -> AppWriter<()> {
+#[endpoint(tags("删除页面展示图"))]
+pub async fn delete_image(resource_img: JsonBody<DeleteUuid>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -31,30 +31,33 @@ pub async fn delete_image(req: PathParam<String>, depot: &mut Depot) -> AppWrite
     }
     let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
-    let image_uuid = req.0;
-    let result = sys_resource_service::delete_image(image_uuid, uuid).await;
+    let image_uuid = resource_img.into_inner().img_uuid.clone();
+    let result = sys_resource_service::delete_image(image_uuid.unwrap(), uuid).await;
     AppWriter(result)
 }
 
 #[endpoint(tags("根据uuid获取资源详情"))]
 pub async fn get_resource_detail_by_uuid(
-    resource_uuid: PathParam<String>,
+    resource: PathFilterStruct,
     depot: &mut Depot,
 ) -> AppWriter<SysResourceResponse> {
     // 从url获取resource_uuid
-    let resource_uuid = resource_uuid.into_inner();
+    let resource_uuid = resource.resource.clone();
 
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
-    if let Err(err) = jwt::parse_token(token) {
-        return AppWriter(Err(err.into()));
-    }
-    let jwt_model = jwt::parse_token(token).unwrap();
+    let jwt_model = match jwt::parse_token(token) {
+        Ok(jwt_model) => jwt_model,
+        Err(err) => return AppWriter(Err(err.into())),
+    };
+
+    // 获取用户id
     let uuid = jwt_model.user_id;
     let role: Option<u32> = jwt_model.role;
 
     let result =
-        sys_resource_service::get_resource_detail_by_uuid(resource_uuid, Some(uuid), role).await;
+        sys_resource_service::get_resource_detail_by_uuid(resource_uuid.unwrap(), Some(uuid), role)
+            .await;
     AppWriter(result)
 }
 
@@ -110,13 +113,32 @@ pub async fn get_resource_list(
 }
 
 #[endpoint(tags("更改下载链接"))]
-pub async fn put_change_link(form_data: JsonBody<SysResourceChangeLink>, res: &mut Response) {
-    let cloned_form_data = form_data.0;
-    let resource_link = cloned_form_data.resource_link.clone();
-    if let Err(_err) = sys_resource_service::change_resource_link(cloned_form_data).await {
+pub async fn put_change_link(
+    query_param: PathFilterStruct,
+    form_data: JsonBody<SysResourceChangeLink>,
+    depot: &mut Depot,
+    res: &mut Response,
+) {
+    let new_link = form_data.0.resource_link;
+    let resource_uuid = query_param.resource;
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
+
+    let jwt_model = match jwt::parse_token(token) {
+        Ok(jwt_model) => jwt_model,
+        Err(err) => {
+            return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res)
+        }
+    };
+
+    // 获取用户id
+    let uuid = jwt_model.user_id;
+    // 更改下载链接
+    if let Err(_err) =
+        sys_resource_service::change_resource_link(new_link.clone(), resource_uuid.unwrap(), uuid).await
+    {
         res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
     }
-    res.render(Json(format!("改资源的下载链接已更改为：{}", resource_link)));
+    res.render(Json(format!("改资源的下载链接已更改为：{}", new_link)));
 }
 
 #[endpoint(tags("新建源码包"))]

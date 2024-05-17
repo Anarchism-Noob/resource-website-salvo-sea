@@ -74,23 +74,23 @@ pub fn api() -> Router {
                     // 资源管理
                     Router::with_path("resource")
                         .push(Router::with_path("create").post(post_create_resource))
-                        .push(Router::with_path("upload/image").post(put_upload_image))
+                        .push(Router::with_path("image/upload").post(put_upload_image))
                         .push(Router::with_path("upload/des").post(put_upload_description))
-                        .push(Router::with_path("image/<uuid>").delete(delete_image))
+                        .push(Router::with_path("image/del").delete(delete_image))
                         .push(Router::with_path("<uuid>").put(put_change_link))
                         .push(Router::with_path("get_all").get(get_resource_list))
                         .push(
                             // 语言管理
                             Router::with_path("language")
                                 .push(Router::with_path("create").post(post_create_language))
-                                .push(Router::with_path("<id>").delete(delete_language))
+                                .push(Router::with_path("del").delete(delete_language))
                                 .push(Router::with_path("get_languages").get(get_dev_languages)),
                         )
                         .push(
                             // 分类管理
                             Router::with_path("category")
                                 .push(Router::with_path("create").post(create_category))
-                                .push(Router::with_path("<id>").delete(delete_category))
+                                .push(Router::with_path("del").delete(delete_category))
                                 .push(Router::with_path("get_categories").get(get_category_list)),
                         ),
                 )

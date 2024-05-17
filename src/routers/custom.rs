@@ -54,8 +54,8 @@ pub fn api() -> Router {
     let mut need_auth_routers = vec![Router::with_path("user")
         .push(
             Router::with_path("profile")
-                .push(Router::with_path("view/<uuid>").get(get_user_profile))
-                .push(Router::with_path("change_pwd/<uuid>").put(put_change_password))
+                .push(Router::with_path("view").get(get_user_profile))
+                .push(Router::with_path("change_pwd").put(put_change_password))
                 .push(Router::with_path("change_profile").put(put_change_profile))
                 .push(Router::with_path("orders").get(get_orders))
                 .push(Router::with_path("avatar").put(put_upload_avatar)),

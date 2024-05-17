@@ -78,11 +78,11 @@ async fn main() {
         false => {
             println!("🔓 SSL is disabled");
             println!(
-                "📖 System Open API Page: https://{}/system/api/swagger-ui",
+                "📖 System Open API Page: http://{}/system/api/swagger-ui",
                 &CFG.server.address.replace("0.0.0.0", "127.0.0.1")
             );
             println!(
-                "📖 Custom Open API Page: https://{}/custom/api/swagger-ui",
+                "📖 Custom Open API Page: http://{}/custom/api/swagger-ui",
                 &CFG.server.address.replace("0.0.0.0", "127.0.0.1")
             );
             let acceptor = TcpListener::new(&CFG.server.address).bind().await;
