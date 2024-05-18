@@ -75,6 +75,6 @@ pub fn api() -> Router {
         );
     let doc = OpenApi::new("Resource WebSite API", "0.1.1").merge_router(&router);
     router
-        .push(doc.into_router("/api-doc/openapi.json"))
-        .push(SwaggerUi::new("/custom/api/api-doc/openapi.json").into_router("swagger-ui"))
+        .push(doc.into_router("/openapi.json"))
+        .push(SwaggerUi::new("/custom/api/openapi.json").into_router("swagger-ui"))
 }

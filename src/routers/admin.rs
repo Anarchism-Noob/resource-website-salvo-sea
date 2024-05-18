@@ -11,7 +11,7 @@ use crate::{
         },
         system_controller::{
             disable_admin, disable_custom, enable_admin, enable_custom, get_admin_list,
-            get_captcha, get_custom_list, get_history_data, get_token_profile, get_withdraw_list,
+            get_custom_list, get_history_data, get_token_profile, get_withdraw_list,
             get_withdraw_list_unprocessed, post_login, post_register_admin, put_change_password,
             put_change_profile, put_recharge, put_upload_avatar, put_withdraw,
             put_withdraw_process,
@@ -139,6 +139,6 @@ pub fn api() -> Router {
     let doc = OpenApi::new("Resource Management API", "0.1.1").merge_router(&router);
     println!("{:?}", doc);
     router
-        .push(doc.into_router("/api-doc/openapi.json"))
-        .push(SwaggerUi::new("/system/api/api-doc/openapi.json").into_router("swagger-ui"))
+        .push(doc.into_router("/openapi.json"))
+        .push(SwaggerUi::new("/system/api/openapi.json").into_router("swagger-ui"))
 }

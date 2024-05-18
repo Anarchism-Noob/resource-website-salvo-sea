@@ -12,16 +12,13 @@ use crate::{
     },
     middleware::jwt,
     services::admin_user_service,
-    utils::{
-        app_error::AppError,
-        captcha_utils::{generate_captcha, varify_captcha, CaptchaImage},
-    },
+    utils::app_error::AppError,
 };
 use salvo::{
     http::{cookie::Cookie, StatusCode},
     oapi::{
         endpoint,
-        extract::{JsonBody, QueryParam},
+        extract::JsonBody,
     },
     prelude::*,
     Request, Response, Writer,
