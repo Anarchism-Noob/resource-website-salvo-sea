@@ -1,4 +1,4 @@
-use salvo::prelude::{ToSchema};
+use salvo::prelude::ToSchema;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 

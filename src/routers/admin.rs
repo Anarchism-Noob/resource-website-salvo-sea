@@ -30,7 +30,6 @@ pub fn api() -> Router {
 
     let mut no_auth_router = vec![
         Router::with_path("comm")
-            .push(Router::with_path("get_captcha").get(get_captcha))
             .push(Router::with_path("get_admin_bg").get(get_admin_bg))
             .push(Router::with_path("login").post(post_login)),
         Router::with_path("system").push(

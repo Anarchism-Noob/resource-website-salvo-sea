@@ -115,7 +115,10 @@ pub async fn put_recharge(
 }
 
 #[endpoint(tags("禁用admin账号"))]
-pub async fn disable_admin(admin_uuid: JsonBody<BodyStructOfDE>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn disable_admin(
+    admin_uuid: JsonBody<BodyStructOfDE>,
+    depot: &mut Depot,
+) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -130,7 +133,10 @@ pub async fn disable_admin(admin_uuid: JsonBody<BodyStructOfDE>, depot: &mut Dep
 }
 
 #[endpoint(tags("启用admin账号"))]
-pub async fn enable_admin(admin_uuid: JsonBody<BodyStructOfDE>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn enable_admin(
+    admin_uuid: JsonBody<BodyStructOfDE>,
+    depot: &mut Depot,
+) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -146,7 +152,10 @@ pub async fn enable_admin(admin_uuid: JsonBody<BodyStructOfDE>, depot: &mut Depo
 }
 
 #[endpoint(tags("禁用custom账号"))]
-pub async fn disable_custom(custom_uuid: JsonBody<BodyStructOfDE>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn disable_custom(
+    custom_uuid: JsonBody<BodyStructOfDE>,
+    depot: &mut Depot,
+) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -162,7 +171,10 @@ pub async fn disable_custom(custom_uuid: JsonBody<BodyStructOfDE>, depot: &mut D
 }
 
 #[endpoint(tags("启用custom账号"))]
-pub async fn enable_custom(custom_uuid: JsonBody<BodyStructOfDE>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn enable_custom(
+    custom_uuid: JsonBody<BodyStructOfDE>,
+    depot: &mut Depot,
+) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -315,47 +327,56 @@ pub async fn put_change_password(
     }
 }
 
-#[endpoint(tags("获取验证码"))]
-pub async fn get_captcha(captcha_type: QueryParam<String, true>, res: &mut Response) {
-    let captcha_type = captcha_type.into_inner();
-    // 生成验证码
-    let captcha_result: AppResult<CaptchaImage> = generate_captcha(captcha_type.as_str()).await;
-    match captcha_result {
-        Ok(captcha) => {
-            res.render(Json(captcha));
-        }
-        Err(err) => {
-            ErrorResponseBuilder::with_err(err).into_response(res);
-        }
-    }
-}
+// #[endpoint(tags("忘记密码"))]
+// pub async fn put_reset_password(req: JsonBody<ResetAdminPwdRequest>, res: &mut Response) {
+//     let _result = admin_user_service::reset_admin_password(req.0).await;
+//     match _result {
+//         Ok(_data) => {
+//             res.remove_cookie("jwt_token");
+//         }
+//     }
+// }
+
+// #[endpoint(tags("获取验证码"))]
+// pub async fn get_captcha(captcha_type: QueryParam<String, true>, res: &mut Response) {
+//     let captcha_type = captcha_type.into_inner();
+//     // 生成验证码
+//     let captcha_result: AppResult<CaptchaImage> = generate_captcha(captcha_type.as_str()).await;
+//     match captcha_result {
+//         Ok(captcha) => {
+//             res.render(Json(captcha));
+//         }
+//         Err(err) => {
+//             ErrorResponseBuilder::with_err(err).into_response(res);
+//         }
+//     }
+// }
 
 #[endpoint(tags("管理员登录"))]
 pub async fn post_login(form_data: JsonBody<SysLoginRequest>, res: &mut Response) {
-    if let Some(captcha_str) = form_data.code.clone() {
-        if let Err(err) = varify_captcha(
-            "login".to_string(),
-            form_data.captcha_uuid.clone().unwrap(),
-            captcha_str.clone(),
-        )
-        .await
-        {
-            return ErrorResponseBuilder::with_err(err).into_response(res);
+    // if let Some(captcha_str) = form_data.code.clone() {
+    //     if let Err(err) = varify_captcha(
+    //         "login".to_string(),
+    //         form_data.captcha_uuid.clone().unwrap(),
+    //         captcha_str.clone(),
+    //     )
+    //     .await
+    //     {
+    //         return ErrorResponseBuilder::with_err(err).into_response(res);
+    //     }
+    let result: AppResult<SysLoginResponse> = admin_user_service::login(form_data.0).await;
+    match result {
+        Ok(data) => {
+            let jwt_token = data.token.clone();
+            let cookie = Cookie::build(("jwt_token", jwt_token))
+                .path("/")
+                .http_only(true)
+                .build();
+            res.add_cookie(cookie);
         }
-
-        let result: AppResult<SysLoginResponse> = admin_user_service::login(form_data.0).await;
-        match result {
-            Ok(data) => {
-                let jwt_token = data.token.clone();
-                let cookie = Cookie::build(("jwt_token", jwt_token))
-                    .path("/")
-                    .http_only(true)
-                    .build();
-                res.add_cookie(cookie);
-            }
-            Err(err) => ErrorResponseBuilder::with_err(err).into_response(res),
-        }
+        Err(err) => ErrorResponseBuilder::with_err(err).into_response(res),
     }
+    // }
 }
 
 #[endpoint(tags("创建管理员"))]

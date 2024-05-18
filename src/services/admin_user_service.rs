@@ -547,6 +547,7 @@ pub async fn login(form_data: SysLoginRequest) -> AppResult<SysLoginResponse> {
     })
 }
 
+
 // 查看当前用户详情
 pub async fn get_admin_profile(user_uuid: String) -> AppResult<SysUserProfileResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
