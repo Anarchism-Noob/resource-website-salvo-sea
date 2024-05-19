@@ -98,6 +98,7 @@ pub fn api() -> Router {
             .push(
                 // 网站信息
                 Router::with_path("website")
+                    .push(Router::with_path("update").post(update_website_profile))
                     .push(
                         Router::with_path("upload")
                             .push(Router::with_path("logo").post(upload_website_logo))
@@ -121,8 +122,8 @@ pub fn api() -> Router {
             .push(Router::with_path("upload_avatar").put(put_upload_avatar))
             .push(
                 Router::with_path("withdrwal")
-                    .get(get_withdraw_list)
-                    .put(put_withdraw),
+                    .push(Router::with_path("claimable ").post(put_withdraw))
+                    .push(Router::with_path("list").get(get_withdraw_list)),
             ),
     ];
     let router = Router::new()
