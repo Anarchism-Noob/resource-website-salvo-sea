@@ -18,7 +18,7 @@ pub async fn delete_image(image_uuid: String, user_uuid: String) -> AppResult<()
     if user_query.is_none() {
         return Err(anyhow::anyhow!("用户不存在").into());
     }
-    // 根据前端传回的资源uuid查询资源信息
+    // 根据前端传回的图片uuid查询资源信息
     let _del_image = SysImage::delete_by_id(image_uuid.clone()).exec(db).await?;
     let query_middle = SysResourceImages::find()
         .filter(sys_resource_images::Column::ImageUuid.eq(image_uuid.clone()))
@@ -29,6 +29,22 @@ pub async fn delete_image(image_uuid: String, user_uuid: String) -> AppResult<()
         let _del_middle = SysResourceImages::delete_by_id(middle_id).exec(db).await?;
         return Ok(());
     }
+    Ok(())
+}
+
+pub async fn delete_des_file(resource_uuid: String, user_uuid: String) -> AppResult<()> {
+    let db = DB.get().ok_or("数据库连接失败").unwrap();
+    let user_query = SysUser::find_by_id(user_uuid.clone()).one(db).await?;
+    if user_query.is_none() {
+        return Err(anyhow::anyhow!("用户不存在").into());
+    }
+    // 根据前端传回的资源uuid删除说明文件
+    let resource_query = SysResources::find_by_id(resource_uuid.clone())
+        .one(db)
+        .await?;
+    let mut resource_update: sys_resources::ActiveModel = resource_query.unwrap().into();
+    resource_update.description_file_path = Set(None);
+    resource_update.update(db).await?;
     Ok(())
 }
 

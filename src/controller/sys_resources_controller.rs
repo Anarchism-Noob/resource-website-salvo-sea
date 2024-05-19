@@ -12,10 +12,7 @@ use crate::{
 };
 use salvo::{
     http::StatusCode,
-    oapi::{
-        endpoint,
-        extract::JsonBody,
-    },
+    oapi::{endpoint, extract::JsonBody},
     prelude::Json,
     Depot, Request, Response, Writer,
 };
@@ -34,6 +31,23 @@ pub async fn delete_image(resource_img: JsonBody<DeleteUuid>, depot: &mut Depot)
     let image_uuid = resource_img.into_inner().img_uuid.clone();
     let result = sys_resource_service::delete_image(image_uuid.unwrap(), uuid).await;
     AppWriter(result)
+}
+
+#[endpoint(tags("删除说明文件"))]
+pub async fn delete_des_file(resource: PathFilterStruct, depot: &mut Depot) -> AppWriter<()> {
+    let token = depot.get::<&str>("jwt_token").copied().unwrap();
+
+    if let Err(err) = jwt::parse_token(token) {
+        return AppWriter(Err(err.into()));
+    }
+    let jwt_model = jwt::parse_token(token).unwrap();
+    let uuid = jwt_model.user_id;
+    let resource_uuid = resource.resource.clone();
+    let _result = sys_resource_service::delete_des_file(resource_uuid.unwrap(), uuid).await;
+    match _result {
+        Ok(_) => AppWriter(Ok(())),
+        Err(err) => AppWriter(Err(err.into())),
+    }
 }
 
 #[endpoint(tags("根据uuid获取资源详情"))]
@@ -134,7 +148,8 @@ pub async fn put_change_link(
     let uuid = jwt_model.user_id;
     // 更改下载链接
     if let Err(_err) =
-        sys_resource_service::change_resource_link(new_link.clone(), resource_uuid.unwrap(), uuid).await
+        sys_resource_service::change_resource_link(new_link.clone(), resource_uuid.unwrap(), uuid)
+            .await
     {
         res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
     }

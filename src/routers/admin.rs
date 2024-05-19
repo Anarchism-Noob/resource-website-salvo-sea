@@ -6,8 +6,8 @@ use crate::{
         resource_category_controller::{create_category, delete_category, get_category_list},
         resource_language_controller::{delete_language, get_dev_languages, post_create_language},
         sys_resources_controller::{
-            delete_image, get_resource_list, post_create_resource, put_change_link,
-            put_upload_description, put_upload_image,
+            delete_des_file, delete_image, get_resource_list, post_create_resource,
+            put_change_link, put_upload_description, put_upload_image,
         },
         system_controller::{
             disable_admin, disable_custom, enable_admin, enable_custom, get_admin_list,
@@ -67,12 +67,19 @@ pub fn api() -> Router {
             .push(
                 // 资源管理
                 Router::with_path("resource")
+                    .push(
+                        Router::with_path("upload")
+                            .push(Router::with_path("image").post(put_upload_image))
+                            .push(Router::with_path("des").post(put_upload_description)),
+                    )
+                    .push(
+                        Router::with_path("remove")
+                            .push(Router::with_path("image").delete(delete_image))
+                            .push(Router::with_path("des").delete(delete_des_file)),
+                    )
                     .push(Router::with_path("create").post(post_create_resource))
-                    .push(Router::with_path("image/upload").post(put_upload_image))
-                    .push(Router::with_path("upload/des").post(put_upload_description))
-                    .push(Router::with_path("image/del").delete(delete_image))
                     .push(Router::with_path("<uuid>").put(put_change_link))
-                    .push(Router::with_path("get_all").get(get_resource_list))
+                    .push(Router::with_path("query_resource").get(get_resource_list))
                     .push(
                         // 语言管理
                         Router::with_path("language")
