@@ -75,7 +75,7 @@ pub fn api() -> Router {
                     .push(
                         Router::with_path("remove")
                             .push(Router::with_path("image").delete(delete_image))
-                            .push(Router::with_path("des").delete(delete_des_file)),
+                            .push(Router::with_path("des_file").delete(delete_des_file)),
                     )
                     .push(Router::with_path("create").post(post_create_resource))
                     .push(Router::with_path("<uuid>").put(put_change_link))
