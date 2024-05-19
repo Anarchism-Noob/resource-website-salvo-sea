@@ -116,7 +116,7 @@ pub fn api() -> Router {
         // 当前账号管理
         Router::with_path("token_admin")
             .push(Router::with_path("profile").get(get_token_profile))
-            .push(Router::with_path("change_password").put(put_change_password))
+            .push(Router::with_path("change_pwd").put(put_change_password))
             .push(Router::with_path("change_profile").put(put_change_profile))
             .push(Router::with_path("upload_avatar").put(put_upload_avatar))
             .push(
