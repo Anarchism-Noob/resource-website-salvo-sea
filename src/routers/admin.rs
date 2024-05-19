@@ -32,100 +32,93 @@ pub fn api() -> Router {
         Router::with_path("comm")
             .push(Router::with_path("get_admin_bg").get(get_admin_bg))
             .push(Router::with_path("login").post(post_login)),
-        Router::with_path("system").push(
-            Router::with_path("manager").push(
-                Router::with_path("website")
-                    .push(Router::with_path("get_profile").get(get_website_profile))
-                    .push(Router::with_path("get_custom_bg").get(get_custom_bg)),
-            ),
+        Router::with_path("manager").push(
+            Router::with_path("website")
+                .push(Router::with_path("get_profile").get(get_website_profile))
+                .push(Router::with_path("get_custom_bg").get(get_custom_bg)),
         ),
     ];
 
-    let mut need_auth_router = vec![Router::with_path("system")
-        .push(
-            Router::with_path("manager")
-                .push(
-                    // 管理员账号管理
-                    Router::with_path("admin")
-                        .push(Router::with_path("get_history_data").get(get_history_data))
-                        .push(Router::with_path("create").post(post_register_admin))
-                        .push(Router::with_path("get_admin_list").get(get_admin_list))
-                        .push(Router::with_path("disable_admin").put(disable_admin))
-                        .push(Router::with_path("enable_admin").put(enable_admin)),
-                )
-                .push(
-                    // 用户账号管理
-                    Router::with_path("custom")
-                        .push(Router::with_path("get_custom_list").get(get_custom_list))
-                        .push(Router::with_path("disable_custom").put(disable_custom))
-                        .push(Router::with_path("enable_custom").put(enable_custom))
-                        .push(Router::with_path("recharge").put(put_recharge)),
-                )
-                .push(
-                    // 处理取款申请
-                    Router::with_path("unprocessed")
-                        .push(
-                            Router::with_path("get_unprocessed").get(get_withdraw_list_unprocessed),
-                        )
-                        .push(Router::with_path("process").put(put_withdraw_process)),
-                )
-                .push(
-                    // 资源管理
-                    Router::with_path("resource")
-                        .push(Router::with_path("create").post(post_create_resource))
-                        .push(Router::with_path("image/upload").post(put_upload_image))
-                        .push(Router::with_path("upload/des").post(put_upload_description))
-                        .push(Router::with_path("image/del").delete(delete_image))
-                        .push(Router::with_path("<uuid>").put(put_change_link))
-                        .push(Router::with_path("get_all").get(get_resource_list))
-                        .push(
-                            // 语言管理
-                            Router::with_path("language")
-                                .push(Router::with_path("create").post(post_create_language))
-                                .push(Router::with_path("del").delete(delete_language))
-                                .push(Router::with_path("get_languages").get(get_dev_languages)),
-                        )
-                        .push(
-                            // 分类管理
-                            Router::with_path("category")
-                                .push(Router::with_path("create").post(create_category))
-                                .push(Router::with_path("del").delete(delete_category))
-                                .push(Router::with_path("get_categories").get(get_category_list)),
-                        ),
-                )
-                .push(
-                    // 网站信息
-                    Router::with_path("website")
-                        .push(Router::with_path("update").put(update_website_profile))
-                        .push(Router::with_path("upload_logo").put(upload_website_logo))
-                        .push(Router::with_path("upload_admin_bg").post(upload_admin_bg))
-                        .push(Router::with_path("upload_custom_bg").post(upload_custom_bg))
-                        .push(
-                            // 轮播图
-                            Router::with_path("carousel")
-                                .push(
-                                    Router::with_path("create")
-                                        .post(post_upload_carousel)
-                                        .put(put_create_carousel),
-                                )
-                                .push(Router::with_path("get_carousels").get(get_carousel))
-                                .push(Router::with_path("delete").delete(delete_carousel)),
-                        ),
-                ),
-        )
-        .push(
-            // 用户账号管理
-            Router::with_path("token_admin")
-                .push(Router::with_path("profile").get(get_token_profile))
-                .push(Router::with_path("change_password").put(put_change_password))
-                .push(Router::with_path("change_profile").put(put_change_profile))
-                .push(Router::with_path("upload_avatar").put(put_upload_avatar))
-                .push(
-                    Router::with_path("withdrwal")
-                        .get(get_withdraw_list)
-                        .put(put_withdraw),
-                ),
-        )];
+    let mut need_auth_router = vec![
+        Router::with_path("manager")
+            .push(
+                // 管理员账号管理
+                Router::with_path("admin")
+                    .push(Router::with_path("get_history_data").get(get_history_data))
+                    .push(Router::with_path("create").post(post_register_admin))
+                    .push(Router::with_path("get_admin_list").get(get_admin_list))
+                    .push(Router::with_path("disable_admin").put(disable_admin))
+                    .push(Router::with_path("enable_admin").put(enable_admin)),
+            )
+            .push(
+                // 用户账号管理
+                Router::with_path("custom")
+                    .push(Router::with_path("get_custom_list").get(get_custom_list))
+                    .push(Router::with_path("disable_custom").put(disable_custom))
+                    .push(Router::with_path("enable_custom").put(enable_custom))
+                    .push(Router::with_path("recharge").put(put_recharge)),
+            )
+            .push(
+                // 处理取款申请
+                Router::with_path("unprocessed")
+                    .push(Router::with_path("get_unprocessed").get(get_withdraw_list_unprocessed))
+                    .push(Router::with_path("process").put(put_withdraw_process)),
+            )
+            .push(
+                // 资源管理
+                Router::with_path("resource")
+                    .push(Router::with_path("create").post(post_create_resource))
+                    .push(Router::with_path("image/upload").post(put_upload_image))
+                    .push(Router::with_path("upload/des").post(put_upload_description))
+                    .push(Router::with_path("image/del").delete(delete_image))
+                    .push(Router::with_path("<uuid>").put(put_change_link))
+                    .push(Router::with_path("get_all").get(get_resource_list))
+                    .push(
+                        // 语言管理
+                        Router::with_path("language")
+                            .push(Router::with_path("create").post(post_create_language))
+                            .push(Router::with_path("del").delete(delete_language))
+                            .push(Router::with_path("get_languages").get(get_dev_languages)),
+                    )
+                    .push(
+                        // 分类管理
+                        Router::with_path("category")
+                            .push(Router::with_path("create").post(create_category))
+                            .push(Router::with_path("del").delete(delete_category))
+                            .push(Router::with_path("get_categories").get(get_category_list)),
+                    ),
+            )
+            .push(
+                // 网站信息
+                Router::with_path("website")
+                    .push(Router::with_path("update").put(update_website_profile))
+                    .push(Router::with_path("upload_logo").put(upload_website_logo))
+                    .push(Router::with_path("upload_admin_bg").post(upload_admin_bg))
+                    .push(Router::with_path("upload_custom_bg").post(upload_custom_bg))
+                    .push(
+                        // 轮播图
+                        Router::with_path("carousel")
+                            .push(
+                                Router::with_path("create")
+                                    .post(post_upload_carousel)
+                                    .put(put_create_carousel),
+                            )
+                            .push(Router::with_path("get_carousels").get(get_carousel))
+                            .push(Router::with_path("delete").delete(delete_carousel)),
+                    ),
+            ),
+        // 当前账号管理
+        Router::with_path("token_admin")
+            .push(Router::with_path("profile").get(get_token_profile))
+            .push(Router::with_path("change_password").put(put_change_password))
+            .push(Router::with_path("change_profile").put(put_change_profile))
+            .push(Router::with_path("upload_avatar").put(put_upload_avatar))
+            .push(
+                Router::with_path("withdrwal")
+                    .get(get_withdraw_list)
+                    .put(put_withdraw),
+            ),
+    ];
     let router = Router::new()
         .hoop(_cors_handler)
         .hoop(Logger::new())
