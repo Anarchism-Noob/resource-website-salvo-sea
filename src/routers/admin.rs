@@ -98,18 +98,17 @@ pub fn api() -> Router {
             .push(
                 // 网站信息
                 Router::with_path("website")
-                    .push(Router::with_path("update").put(update_website_profile))
-                    .push(Router::with_path("upload_logo").put(upload_website_logo))
-                    .push(Router::with_path("upload_admin_bg").post(upload_admin_bg))
-                    .push(Router::with_path("upload_custom_bg").post(upload_custom_bg))
+                    .push(
+                        Router::with_path("upload")
+                            .push(Router::with_path("logo").post(upload_website_logo))
+                            .push(Router::with_path("admin_bg").post(upload_admin_bg))
+                            .push(Router::with_path("custom_bg").post(upload_custom_bg))
+                            .push(Router::with_path("carousel").post(post_upload_carousel)),
+                    )
                     .push(
                         // 轮播图
                         Router::with_path("carousel")
-                            .push(
-                                Router::with_path("create")
-                                    .post(post_upload_carousel)
-                                    .put(put_create_carousel),
-                            )
+                            .push(Router::with_path("create").put(put_create_carousel))
                             .push(Router::with_path("get_carousels").get(get_carousel))
                             .push(Router::with_path("delete").delete(delete_carousel)),
                     ),
