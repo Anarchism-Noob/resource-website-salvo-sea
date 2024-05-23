@@ -16,7 +16,7 @@ use salvo::{
 };
 
 #[endpoint(tags("获取资源分类列表"))]
-pub async fn get_category_list() -> AppWriter<Vec<QueryCategoryResponse>> {
+pub async fn all_categories() -> AppWriter<Vec<QueryCategoryResponse>> {
     let _result = resource_category_service::get_all_category().await;
     AppWriter(_result)
 }

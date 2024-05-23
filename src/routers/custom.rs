@@ -12,7 +12,7 @@ use crate::{
 };
 use salvo::prelude::{CatchPanic, Logger, OpenApi, Router, SwaggerUi};
 
-pub fn api() -> Router {
+pub fn custom_api() -> Router {
     let mut no_auth_router = vec![
         Router::with_path("comm")
             // 用户登陆
@@ -35,15 +35,6 @@ pub fn api() -> Router {
             .push(
                 Router::with_path("resources")
                     .get(get_resource_list)
-                    // .push(
-                    //     Router::with_path("list_of_language").get(get_resource_list_of_language)
-                    // )
-                    // .push(
-                    //     Router::with_path("list_of_category").get(get_resources_of_category)
-                    // )
-                    // .push(
-                    //     Router::with_path("list_category_language").get(get_resources_of_category_and_language)
-                    // )
                     .push(Router::with_path("<uuid>").get(get_resource_detail_by_uuid)),
             )
             .push(Router::with_path("carousel").get(get_carousel)),
@@ -73,8 +64,5 @@ pub fn api() -> Router {
                 .append(&mut need_auth_routers)
                 .hoop(jwt_auth_middleware),
         );
-    let doc = OpenApi::new("Resource WebSite API", "0.1.1").merge_router(&router);
     router
-        .push(doc.into_router("/openapi.json"))
-        .push(SwaggerUi::new("/custom/api/openapi.json").into_router("swagger-ui"))
 }

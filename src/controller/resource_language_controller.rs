@@ -16,13 +16,13 @@ use salvo::{
 };
 
 #[endpoint(tags("获取开发语言列表"))]
-pub async fn get_dev_languages() -> AppWriter<Vec<QueryLanguageResponse>> {
+pub async fn all_languages() -> AppWriter<Vec<QueryLanguageResponse>> {
     let _redult = resource_language_service::get_language_list().await;
     AppWriter(_redult)
 }
 
 #[endpoint(tags("新增开发语言项"))]
-pub async fn post_create_language(
+pub async fn create_language(
     req: JsonBody<BodyStructCreateLanguage>,
     depot: &mut Depot,
 ) -> AppWriter<()> {

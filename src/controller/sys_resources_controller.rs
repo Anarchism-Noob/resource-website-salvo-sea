@@ -99,18 +99,16 @@ pub async fn get_resource_list(
             Ok(result) => AppWriter(Ok(result)),
             Err(err) => AppWriter(Err(err)),
         }
-    } else
-    // 若存在category
-    if category.is_some() {
+    } else if category.is_some() {
+        // 若存在category
         match sys_resource_service::get_resources_of_category(category.unwrap(), page, page_size)
             .await
         {
             Ok(result) => AppWriter(Ok(result)),
             Err(err) => AppWriter(Err(err)),
         }
-    } else
-    // 若存在language
-    if language.is_some() {
+    } else if language.is_some() {
+        // 若存在language
         match sys_resource_service::get_resours_of_language(language.unwrap(), page, page_size)
             .await
         {
@@ -157,7 +155,7 @@ pub async fn put_change_link(
 }
 
 #[endpoint(tags("新建源码包"))]
-pub async fn post_create_resource(
+pub async fn create_resource(
     form_data: JsonBody<SysResourceCreateRequest>,
     depot: &mut Depot,
     res: &mut Response,
@@ -180,7 +178,7 @@ pub async fn post_create_resource(
 }
 
 #[endpoint(tags("上传描述文件"))]
-pub async fn put_upload_description(req: &mut Request, res: &mut Response) {
+pub async fn upload_des_file(req: &mut Request, res: &mut Response) {
     let file = req.file("description").await;
     if let Some(file) = file {
         let mime = file.content_type().unwrap().to_string();
@@ -223,7 +221,7 @@ pub async fn put_upload_description(req: &mut Request, res: &mut Response) {
 //上传资源截图
 #[endpoint(tags("上传图片"))]
 pub async fn put_upload_image(req: &mut Request, res: &mut Response) {
-    let files = req.files("avatar").await;
+    let files = req.files("des_imaghe").await;
     if let Some(files) = files {
         let mut msgs: Vec<(String, String)> = Vec::with_capacity(files.len());
         for file in files {

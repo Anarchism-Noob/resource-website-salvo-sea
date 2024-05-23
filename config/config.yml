@@ -1,6 +1,6 @@
 server:
   name: "source_website_salvo_sea"
-  address: "0.0.0.0:5800"
+  address: "0.0.0.0:4514"
   ssl: false
   cors_allow_origin:
     - "https://salvo.rs"

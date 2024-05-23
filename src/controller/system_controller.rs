@@ -40,7 +40,7 @@ pub async fn get_history_data(depot: &mut Depot) -> AppWriter<CountDataResponse>
 }
 
 #[endpoint(tags("处理取款申请"))]
-pub async fn put_withdraw_process(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn put_process(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<()> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -55,7 +55,7 @@ pub async fn put_withdraw_process(req: JsonBody<String>, depot: &mut Depot) -> A
 }
 
 #[endpoint(tags("获取未处理的取款记录"))]
-pub async fn get_withdraw_list_unprocessed(
+pub async fn all_unprocessed(
     depot: &mut Depot,
 ) -> AppWriter<Vec<WithdrawalsResponse>> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
@@ -69,7 +69,7 @@ pub async fn get_withdraw_list_unprocessed(
 }
 
 #[endpoint(tags("获取当前用户的取款记录"))]
-pub async fn get_withdraw_list(depot: &mut Depot) -> AppWriter<Vec<WithdrawalsResponse>> {
+pub async fn all_withdraw(depot: &mut Depot) -> AppWriter<Vec<WithdrawalsResponse>> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -214,7 +214,7 @@ pub async fn get_custom_list(depot: &mut Depot) -> AppWriter<Vec<CustomUserProfi
 }
 
 #[endpoint(tags("更改当前用户信息"))]
-pub async fn put_change_profile(
+pub async fn change_profile(
     form_data: JsonBody<ChangeAdminProfileRequest>,
     depot: &mut Depot,
 ) -> AppWriter<SysUserProfileResponse> {
@@ -249,7 +249,7 @@ pub async fn get_token_profile(depot: &mut Depot) -> AppWriter<SysUserProfileRes
 
 // 头像上传功能
 #[endpoint(tags("将头像保存到服务器"))]
-pub async fn put_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut Response) {
+pub async fn upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut Response) {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     if let Err(err) = jwt::parse_token(token) {
@@ -301,7 +301,7 @@ pub async fn put_upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut R
 }
 
 #[endpoint(tags("更改当前用户密码"))]
-pub async fn put_change_password(
+pub async fn pchange_pwd(
     req: JsonBody<ChangeAdminPwdRequest>,
     depot: &mut Depot,
     res: &mut Response,
@@ -334,33 +334,12 @@ pub async fn put_change_password(
 //     }
 // }
 
-// #[endpoint(tags("获取验证码"))]
-// pub async fn get_captcha(captcha_type: QueryParam<String, true>, res: &mut Response) {
-//     let captcha_type = captcha_type.into_inner();
-//     // 生成验证码
-//     let captcha_result: AppResult<CaptchaImage> = generate_captcha(captcha_type.as_str()).await;
-//     match captcha_result {
-//         Ok(captcha) => {
-//             res.render(Json(captcha));
-//         }
-//         Err(err) => {
-//             ErrorResponseBuilder::with_err(err).into_response(res);
-//         }
-//     }
-// }
-
 #[endpoint(tags("管理员登录"))]
-pub async fn post_login(form_data: JsonBody<SysLoginRequest>, res: &mut Response) {
-    // if let Some(captcha_str) = form_data.code.clone() {
-    //     if let Err(err) = varify_captcha(
-    //         "login".to_string(),
-    //         form_data.captcha_uuid.clone().unwrap(),
-    //         captcha_str.clone(),
-    //     )
-    //     .await
-    //     {
-    //         return ErrorResponseBuilder::with_err(err).into_response(res);
-    //     }
+pub async fn post_login(
+    form_data: JsonBody<SysLoginRequest>,
+    res: &mut Response
+) {
+    println!("用户：{}正在登录", form_data.0.user_name);
     let result: AppResult<SysLoginResponse> = admin_user_service::login(form_data.0).await;
     match result {
         Ok(data) => {
@@ -373,7 +352,6 @@ pub async fn post_login(form_data: JsonBody<SysLoginRequest>, res: &mut Response
         }
         Err(err) => ErrorResponseBuilder::with_err(err).into_response(res),
     }
-    // }
 }
 
 #[endpoint(tags("创建管理员"))]

@@ -48,8 +48,6 @@ pub struct SysUserProfileResponse {
 #[salvo(schema(rename_all = "camelCase"))]
 #[serde(rename_all = "camelCase")]
 pub struct SysLoginRequest {
-    pub code: Option<String>,
-    pub captcha_uuid: Option<String>,
     pub user_name: String,
     pub user_pwd: String,
 }

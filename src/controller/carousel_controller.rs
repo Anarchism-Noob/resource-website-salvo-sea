@@ -40,7 +40,7 @@ pub async fn get_carousel() -> AppWriter<Vec<QueryCarouselResponse>> {
 }
 
 #[endpoint(tags("创建轮播图"))]
-pub async fn put_create_carousel(
+pub async fn create_carousel(
     form_data: JsonBody<CreateCarouselRequest>,
     depot: &mut Depot,
     res: &mut Response,
@@ -67,7 +67,7 @@ pub async fn put_create_carousel(
 }
 
 #[endpoint(tags("上传轮播图"))]
-pub async fn post_upload_carousel(req: &mut Request, res: &mut Response) {
+pub async fn upload_carousel(req: &mut Request, res: &mut Response) {
     // 创建一个uploads目录，用于保存上传的文件
     let file = req.file("avatar").await;
     if let Some(file) = file {

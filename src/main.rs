@@ -82,8 +82,14 @@ async fn main() {
                 &CFG.server.address.replace("0.0.0.0", "127.0.0.1")
             );
             println!(
+                "📖 System Open API Page: http://192.168.1.17/system/api/swagger-ui"
+            );
+            println!(
                 "📖 Custom Open API Page: http://{}/custom/api/swagger-ui",
                 &CFG.server.address.replace("0.0.0.0", "127.0.0.1")
+            );
+            println!(
+                "📖 Custom Open API Page: http://192.168.1.17/custom/api/swagger-ui"
             );
             let acceptor = TcpListener::new(&CFG.server.address).bind().await;
             let server = Server::new(acceptor);
