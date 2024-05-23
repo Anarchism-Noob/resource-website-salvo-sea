@@ -4,9 +4,8 @@ use crate::{
         custom_user_dto::{
             ChangePwdRequest, ChangeUserProfileRequest, CustomUserLoginRequest,
             CustomUserLoginResponse, CustomUserProfileResponse, CustomUserRegisterRequest,
-            CustomUserResponse,
+            CustomUserResponse,BuyResourcetRequest,
         },
-        query_struct::PathFilterStruct,
     },
     middleware::*,
     services::custom_user_service,
@@ -45,8 +44,7 @@ pub async fn get_orders(depot: &mut Depot) -> AppWriter<Vec<CustomOrderResponse>
 
 #[endpoint{tags ("购买资源"), }]
 pub async fn put_buy_resource(
-    query_param: PathFilterStruct,
-    form_data: JsonBody<String>,
+    form_data: JsonBody<BuyResourcetRequest>,
     depot: &mut Depot,
 ) -> AppWriter<CustomOrderResponse> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
@@ -58,14 +56,9 @@ pub async fn put_buy_resource(
     let jwt_model = jwt::parse_token(token).unwrap();
     let uuid = jwt_model.user_id;
 
-    let auth_name = form_data.0.clone();
-    let resource_uuid = query_param.resource;
-    let resource = match resource_uuid {
-        Some(uuid) => uuid,
-        None => {
-            return AppError::AnyHow(anyhow::anyhow!("资源uuid不能为空")).into();
-        }
-    };
+    let from_data = form_data.0;
+    let auth_name = from_data.auth_name;
+    let resource = from_data.resource_uuid;
     let result = custom_user_service::buy_resource_request(resource, auth_name, uuid).await;
     AppWriter(result)
 }

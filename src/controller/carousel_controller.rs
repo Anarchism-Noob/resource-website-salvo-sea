@@ -34,7 +34,7 @@ pub async fn delete_carousel(img_uuid: JsonBody<DeleteUuid>, depot: &mut Depot) 
 }
 
 #[endpoint(tags("获取首页轮播图"))]
-pub async fn get_carousel() -> AppWriter<Vec<QueryCarouselResponse>> {
+pub async fn all_carousel() -> AppWriter<Vec<QueryCarouselResponse>> {
     let carousel = sys_carousel_service::get_carousel().await;
     AppWriter(carousel)
 }

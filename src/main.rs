@@ -40,8 +40,9 @@ async fn main() {
     tracing::info!("log level: {}", &CFG.log.filter_level);
     //
     // init_db_conn().await;
-    let router = router();
-    let service: Service = router.into();
+    let service = Service::new(router());
+    // let router = router();
+    // let service: Service = router.into();
     let service = service.catcher(Catcher::default().hoop(handle_404)); //.hoop(_cors_handler).hoop(handle_404));
     println!("🌪️ {} is starting ", &CFG.server.name);
     println!("🔄 listen on {}", &CFG.server.address);
@@ -78,18 +79,18 @@ async fn main() {
         false => {
             println!("🔓 SSL is disabled");
             println!(
-                "📖 System Open API Page: http://{}/system/api/swagger-ui",
+                "📖 System Open API Page: http://{}/system/api/system-api",
                 &CFG.server.address.replace("0.0.0.0", "127.0.0.1")
             );
             println!(
-                "📖 System Open API Page: http://192.168.1.17/system/api/swagger-ui"
+                "📖 System Open API Page: http://192.168.1.17:4514/system/api/swagger-ui"
             );
             println!(
                 "📖 Custom Open API Page: http://{}/custom/api/swagger-ui",
                 &CFG.server.address.replace("0.0.0.0", "127.0.0.1")
             );
             println!(
-                "📖 Custom Open API Page: http://192.168.1.17/custom/api/swagger-ui"
+                "📖 Custom Open API Page: http://192.168.1.17:4514/custom/api/swagger-ui"
             );
             let acceptor = TcpListener::new(&CFG.server.address).bind().await;
             let server = Server::new(acceptor);

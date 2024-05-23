@@ -16,8 +16,6 @@ pub struct Model {
     pub website_icon: Option<String>,
     pub custom_login_img: Option<String>,
     pub admin_login_img: Option<String>,
-    pub home_page_img: Option<String>,
-    pub home_page_carousel_img: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

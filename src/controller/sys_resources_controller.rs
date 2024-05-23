@@ -76,7 +76,7 @@ pub async fn get_resource_detail_by_uuid(
 }
 
 #[endpoint(tags("根据QueryParams获取资源列表"))]
-pub async fn get_resource_list(
+pub async fn query_resource(
     query_parament: QueryParamsStruct,
     page_s: JsonBody<QueryPageStruct>,
 ) -> AppWriter<Vec<SysResourceList>> {

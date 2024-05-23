@@ -1,6 +1,4 @@
-use crate::{
-    utils::check_user::{check_user_admin, check_user_custom},
-};
+use crate::utils::check_user::{check_user_admin, check_user_custom};
 use salvo::prelude::*;
 use crate::config::CFG;
 use crate::middleware::jwt::JwtClaims;
@@ -44,7 +42,7 @@ pub async fn jwt_auth_middleware(
                 res.status_code(StatusCode::FORBIDDEN);
                 res.render("Access forbidden for this URL.");
             }
-        }else if let Ok(custom_user) = check_user_custom(&user.user_id).await {
+        }else if let Ok(_custom_user) = check_user_custom(&user.user_id).await {
             // 普通用户只能访问/custom/api/**下的url
             if req.uri().path().starts_with("/custom/api/"){
                 ctrl.call_next(req, depot, res).await;

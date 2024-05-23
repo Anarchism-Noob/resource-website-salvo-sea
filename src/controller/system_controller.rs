@@ -319,6 +319,7 @@ pub async fn pchange_pwd(
     match result {
         Ok(_data) => {
             res.remove_cookie("jwt_token");
+            res.render(Json(_data))
         }
         Err(err) => ErrorResponseBuilder::with_err(err).into_response(res),
     }
@@ -339,8 +340,9 @@ pub async fn post_login(
     form_data: JsonBody<SysLoginRequest>,
     res: &mut Response
 ) {
-    println!("用户：{}正在登录", form_data.0.user_name);
-    let result: AppResult<SysLoginResponse> = admin_user_service::login(form_data.0).await;
+    let form_data = form_data.0;
+    println!("用户：{}正在登录", form_data.user_name.clone());
+    let result: AppResult<SysLoginResponse> = admin_user_service::login(form_data).await;
     match result {
         Ok(data) => {
             let jwt_token = data.token.clone();
@@ -349,8 +351,11 @@ pub async fn post_login(
                 .http_only(true)
                 .build();
             res.add_cookie(cookie);
+            res.render(Json(data))
         }
-        Err(err) => ErrorResponseBuilder::with_err(err).into_response(res),
+        Err(err) => {
+            ErrorResponseBuilder::with_err(err).into_response(res);
+        },
     }
 }
 

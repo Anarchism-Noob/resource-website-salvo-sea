@@ -23,7 +23,7 @@ pub struct ChangePwdRequest {
 #[salvo(schema(rename_all = "camelCase"))]
 #[serde(rename_all = "camelCase")]
 pub struct BuyResourcetRequest {
-    // pub resource_uuid: String,
+    pub resource_uuid: String,
     pub auth_name: String,
 }
 
