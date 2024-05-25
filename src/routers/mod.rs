@@ -3,8 +3,10 @@ mod custom;
 
 use self::admin::{auth_system_api, no_auth_system_api};
 use self::custom::{auth_custom_api, no_auth_custom_api};
-use crate::middleware::cors::cors_middleware;
-use crate::middleware::jwt_auth::jwt_auth_middleware;
+use crate::middleware::{
+    jwt_auth::jwt_auth_middleware,
+    cors,
+};
 use salvo::{
     oapi::OpenApi,
     prelude::{CatchPanic, Logger, Router, SwaggerUi},
@@ -52,7 +54,7 @@ pub fn router() -> Router {
     }
 
     // // 创建k跨域处理中间件
-    let _cors_middleware = cors_middleware();
+    let _cors_handler = cors::cors_middleware();
 
     // 创建并拼接API文档路由
     let custom_doc = OpenApi::new("RSWS Client API", "0.1.1").merge_router(&client_router);
@@ -63,7 +65,7 @@ pub fn router() -> Router {
     router = router
         .hoop(Logger::new())
         .hoop(CatchPanic::new())
-        .hoop(_cors_middleware)
+        // .hoop(_cors_handler)
         .unshift(
             Router::new()
                 .unshift(no_auth_router_client_temp)

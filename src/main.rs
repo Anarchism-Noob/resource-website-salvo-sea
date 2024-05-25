@@ -36,6 +36,7 @@ async fn main() {
         .file_name(&CFG.log.file_name)
         .rolling(&CFG.log.rolling)
         .init();
+    info!("loading Logger:{:?}", _guard);
     super_admin_init().await;
     tracing::info!("log level: {}", &CFG.log.filter_level);
     //

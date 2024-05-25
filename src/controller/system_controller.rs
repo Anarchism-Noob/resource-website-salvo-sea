@@ -351,6 +351,7 @@ pub async fn post_login(
                 .http_only(true)
                 .build();
             res.add_cookie(cookie);
+            res.status_code(StatusCode::OK);
             res.render(Json(data))
         }
         Err(err) => {

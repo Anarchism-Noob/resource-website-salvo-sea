@@ -27,3 +27,17 @@ pub struct WebSiteProfileResponse {
     pub custom_login_bg: Option<String>,
     pub admin_login_bg: Option<String>,
 }
+
+#[derive(Serialize, Debug, Validate, ToSchema, Default)]
+#[salvo(schema(rename_all = "camelCase"))]
+#[serde(rename_all = "camelCase")]
+pub struct AdminBgResponse{
+    pub login_bg: Option<String>,
+}
+
+#[derive(Serialize, Debug, Validate, ToSchema, Default)]
+#[salvo(schema(rename_all = "camelCase"))]
+#[serde(rename_all = "camelCase")]
+pub struct CustomBgResponse{
+    pub login_bg: Option<String>,
+}

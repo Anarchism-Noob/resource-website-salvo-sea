@@ -1,9 +1,12 @@
 use crate::config::CFG;
-use salvo::cors::{AllowHeaders, AllowMethods, Cors, CorsHandler};
+use salvo::cors::{AllowHeaders, AllowMethods, AllowOrigin, Cors, CorsHandler};
+use tracing::info;
 
 pub fn cors_middleware() -> CorsHandler {
+    info!("CORS middleware enabled");
     Cors::new()
-        .allow_origin(&CFG.server.cors_allow_origin)
+        .allow_origin(AllowOrigin::any())
+        // .allow_origin(&CFG.server.cors_allow_origin)
         .allow_methods(AllowMethods::any())
         .allow_headers(AllowHeaders::any())
         .into_handler()
