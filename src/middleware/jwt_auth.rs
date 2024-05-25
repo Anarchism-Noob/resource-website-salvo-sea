@@ -10,7 +10,7 @@ pub async fn jwt_auth_middleware(
     ctrl: &mut FlowCtrl,
     depot: &mut Depot,
 ) {
-    println!("jwt_auth_middleware--> load");
+    println!("加载jwt鉴权中间件");
     if let Ok(user) = depot.get::<JwtClaims>(&CFG.jwt.jwt_secret){
         if let Ok(admin_user) = check_user_admin(&user.user_id).await {
             // 超级管理员直接放行

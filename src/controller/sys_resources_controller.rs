@@ -4,7 +4,7 @@ use crate::{
         query_struct::{DeleteUuid, PathFilterStruct, QueryPageStruct, QueryParamsStruct},
         sys_resources_dto::{
             SysResourceChangeLink, SysResourceCreateRequest, SysResourceList, SysResourceResponse,
-        },
+        }, sys_user_dto::BaseResponse,
     },
     middleware::jwt,
     services::sys_resource_service,
@@ -126,19 +126,23 @@ pub async fn query_resource(
 
 #[endpoint(tags("更改下载链接"))]
 pub async fn put_change_link(
-    query_param: PathFilterStruct,
     form_data: JsonBody<SysResourceChangeLink>,
     depot: &mut Depot,
-    res: &mut Response,
-) {
-    let new_link = form_data.0.resource_link;
-    let resource_uuid = query_param.resource;
+)->AppWriter<BaseResponse> {
+    let form_data = form_data.0;
+    let new_link = form_data.resource_link;
+    let resource = form_data.resource_uuid;
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
 
     let jwt_model = match jwt::parse_token(token) {
         Ok(jwt_model) => jwt_model,
         Err(err) => {
-            return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res)
+            let res = BaseResponse {
+                code: 1,
+                msg: "更改下载链接失败".to_string(),
+                data: Some(err.to_string()),
+            };
+            return AppWriter(Ok(res));
         }
     };
 
@@ -146,12 +150,22 @@ pub async fn put_change_link(
     let uuid = jwt_model.user_id;
     // 更改下载链接
     if let Err(_err) =
-        sys_resource_service::change_resource_link(new_link.clone(), resource_uuid.unwrap(), uuid)
+        sys_resource_service::change_resource_link(new_link, resource, uuid)
             .await
     {
-        res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
+        let res = BaseResponse {
+            code: 1,
+            msg: "更改下载链接失败".to_string(),
+            data: Some(_err.to_string()),
+        };
+        return AppWriter(Ok(res));
     }
-    res.render(Json(format!("改资源的下载链接已更改为：{}", new_link)));
+    let res = BaseResponse {
+        code: 0,
+        msg: "更改下载链接成功".to_string(),
+        data: None,
+    };
+    AppWriter(Ok(res))
 }
 
 #[endpoint(tags("新建源码包"))]

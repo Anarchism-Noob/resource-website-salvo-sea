@@ -42,6 +42,7 @@ async fn main() {
     //
     // init_db_conn().await;
     let service = Service::new(router());
+    let service = service.hoop(cors_middleware());
     // let router = router();
     // let service: Service = router.into();
     let service = service.catcher(Catcher::default().hoop(handle_404)); //.hoop(_cors_handler).hoop(handle_404));

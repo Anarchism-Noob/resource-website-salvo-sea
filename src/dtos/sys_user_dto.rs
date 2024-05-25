@@ -62,3 +62,15 @@ pub struct SysLoginResponse {
     pub token: String,
     pub exp: i64,
 }
+
+#[derive(Debug, Serialize, Deserialize, ToSchema, Default)]
+#[salvo(schema(rename_all = "camelCase"))]
+#[serde(rename_all = "camelCase")]
+pub struct BaseResponse {  
+    #[serde(rename = "code")]  
+    pub code: u32,  
+    #[serde(rename = "msg")]  
+    pub msg: String,  
+    #[serde(rename = "data", skip_serializing_if = "Option::is_none")]  
+    pub data: Option<String>,  
+}  

@@ -3,10 +3,7 @@ mod custom;
 
 use self::admin::{auth_system_api, no_auth_system_api};
 use self::custom::{auth_custom_api, no_auth_custom_api};
-use crate::middleware::{
-    jwt_auth::jwt_auth_middleware,
-    cors,
-};
+use crate::middleware::jwt_auth::jwt_auth_middleware;
 use salvo::{
     oapi::OpenApi,
     prelude::{CatchPanic, Logger, Router, SwaggerUi},
@@ -53,9 +50,6 @@ pub fn router() -> Router {
         client_router = client_router.push(Router::with_path("/custom/api").push(sub_router));
     }
 
-    // // 创建k跨域处理中间件
-    let _cors_handler = cors::cors_middleware();
-
     // 创建并拼接API文档路由
     let custom_doc = OpenApi::new("RSWS Client API", "0.1.1").merge_router(&client_router);
     // println!("Custom API JSON:{:?}", custom_doc);
@@ -65,7 +59,7 @@ pub fn router() -> Router {
     router = router
         .hoop(Logger::new())
         .hoop(CatchPanic::new())
-        // .hoop(_cors_handler)
+        // .hoop(cors_middleware())
         .unshift(
             Router::new()
                 .unshift(no_auth_router_client_temp)
@@ -78,7 +72,7 @@ pub fn router() -> Router {
                 .push(
                     SwaggerUi::new("/custom-doc/openapi.json")
                         .title("RSWS Client API")
-                        .into_router("/custom-api"),
+                        .into_router("/custom/api/swagger-ui"),
                 ),
         )
         .unshift(
@@ -93,7 +87,7 @@ pub fn router() -> Router {
                 .unshift(
                     SwaggerUi::new("/system-doc/openapi.json")
                         .title("RSWS System API")
-                        .into_router("/system-api"),
+                        .into_router("/system/api/swagger-ui"),
                 ),
         );
 

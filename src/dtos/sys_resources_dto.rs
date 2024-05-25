@@ -8,6 +8,7 @@ use validator::Validate;
 #[salvo(schema(rename_all = "camelCase"))]
 #[serde(rename_all = "camelCase")]
 pub struct SysResourceChangeLink {
+    pub resource_uuid: String,
     pub resource_link: String,
 }
 

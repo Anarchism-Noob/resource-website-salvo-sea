@@ -338,24 +338,25 @@ pub async fn pchange_pwd(
 #[endpoint(tags("管理员登录"))]
 pub async fn post_login(
     form_data: JsonBody<SysLoginRequest>,
-    res: &mut Response
-) {
+    // res: &mut Response
+)-> AppWriter<SysLoginResponse> {
     let form_data = form_data.0;
     println!("用户：{}正在登录", form_data.user_name.clone());
     let result: AppResult<SysLoginResponse> = admin_user_service::login(form_data).await;
     match result {
         Ok(data) => {
-            let jwt_token = data.token.clone();
-            let cookie = Cookie::build(("jwt_token", jwt_token))
-                .path("/")
-                .http_only(true)
-                .build();
-            res.add_cookie(cookie);
-            res.status_code(StatusCode::OK);
-            res.render(Json(data))
+            return AppWriter(Ok(data));
+            // let jwt_token = data.token.clone();
+            // let cookie = Cookie::build(("jwt_token", jwt_token))
+            //     .path("/")
+            //     .http_only(true)
+            //     .build();
+            // res.add_cookie(cookie);
+            // res.render(Json(data))
         }
         Err(err) => {
-            ErrorResponseBuilder::with_err(err).into_response(res);
+            return AppWriter(Err(AppError::AnyHow(err.into())));
+            // ErrorResponseBuilder::with_err(err).into_response(res);
         },
     }
 }
