@@ -15,7 +15,7 @@ use crate::{
     utils::app_error::AppError,
 };
 use salvo::{
-    http::{cookie::Cookie, StatusCode},
+    http::StatusCode,
     oapi::{
         endpoint,
         extract::JsonBody,
