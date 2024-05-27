@@ -6,10 +6,10 @@ server:
     - "http://localhost:5173"
 
 database:
-  database_url: "mysql://root:99158194@localhost/resource_website"
+  database_url: "mysql://root:99158194@192.168.1.17/resource_website"
 
 cache:
-  redis_url: "redis://localhost:6379"
+  redis_url: "redis://192.168.1.17:6379"
 #  redis_url: "redis://:密码@localhost:6379"
 
 jwt:

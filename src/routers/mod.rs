@@ -69,7 +69,7 @@ pub fn router() -> Router {
         .unshift(
             SwaggerUi::new("/system-doc/openapi.json")
                     .title("RSWS System API")
-                    .into_router("/system/swagger-ui"),
+                    .into_router("/api/system/swagger-ui"),
         );
 
     client_router = client_router
@@ -83,7 +83,7 @@ pub fn router() -> Router {
         .unshift(
             SwaggerUi::new("/custom-doc/openapi.json")
                     .title("RSWS Client API")
-                    .into_router("/custom/swagger-ui"),
+                    .into_router("/api/custom/swagger-ui"),
         );
 
 
