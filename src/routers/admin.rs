@@ -28,7 +28,6 @@ pub fn auth_system_api() -> Vec<Router> {
         Router::with_path("/token_user/profile").get(get_token_profile),
         Router::with_path("/token_user/change_pwd").post(pchange_pwd),
         Router::with_path("/token_user/change_info").post(change_profile),
-        Router::with_path("/token_user/upload/avatar").post(upload_avatar),
         Router::with_path("/token_user/withdrawl").post(put_withdraw),
         Router::with_path("/token_user/all_withdrawl").get(all_withdraw),
         // 创建一个管理员账号
@@ -48,8 +47,6 @@ pub fn auth_system_api() -> Vec<Router> {
         Router::with_path("/manager/processed").post(put_process),
         // 资源管理
         Router::with_path("/manager/resource/query_resource").get(query_resource),
-        Router::with_path("/manager/resource/upload/image").post(put_upload_image),
-        Router::with_path("/manager/resource/upload/des_file").post(upload_des_file),
         Router::with_path("/manager/resource/remove/image").delete(delete_image),
         Router::with_path("/manager/resource/remove/des_file").delete(delete_des_file),
         Router::with_path("/manager/resource/create").post(create_resource),
@@ -61,16 +58,20 @@ pub fn auth_system_api() -> Vec<Router> {
         Router::with_path("/manager/resource/category/create").post(create_category),
         Router::with_path("/manager/resource/category/remove").delete(delete_category),
         // 网站管理
-        Router::with_path("/manager/website/upload/logo").post(upload_website_logo),
-        Router::with_path("/manager/website/upload/admin_bg").post(upload_admin_bg),
-        Router::with_path("/manager/website/upload/custom_bg").post(upload_custom_bg),
         Router::with_path("/manager/website/update").post(update_website_profile),
         // 轮播图管理
         Router::with_path("/manager/carousel/all_carousel").get(all_carousel),
-        Router::with_path("/manager/carousel/upload").post(upload_carousel),
         Router::with_path("/manager/carousel/create").post(create_carousel),
         Router::with_path("/manager/carousel/remove").delete(delete_carousel),
         //Router::with_path("/manager/carousel/detail").get(detail_carousel)
+        // 上传统一管理
+        Router::with_path("/upload/resource_image").post(put_upload_image),
+        Router::with_path("/upload/carousel_image").post(upload_carousel),
+        Router::with_path("/upload/resource_des_file").post(upload_des_file),
+        Router::with_path("/upload/website_logo").post(upload_website_logo),
+        Router::with_path("/upload/admin_bg").post(upload_admin_bg),
+        Router::with_path("/upload/custom_bg").post(upload_custom_bg),
+        Router::with_path("/upload/token_user_avatar").post(upload_avatar),
     ];
     router
 }
