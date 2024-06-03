@@ -1,3 +1,4 @@
+use crate::dtos::sys_user_dto::BaseResponse;
 use crate::utils::check_user::{check_user_admin, check_user_custom};
 use salvo::prelude::*;
 use crate::config::CFG;
@@ -18,23 +19,45 @@ pub async fn jwt_auth_middleware(
                 ctrl.call_next(req, depot, res).await;
             }else if admin_user.role == 1{
                 //非超级管理员的管理员账号不能访问的url白名单
-                let restricted_urls = [
-                    // 禁用或启用管理员账号
-                    "/create",
-                    "/disable_admin",
-                    "/enable_admin",
-                    "/all_admin",
-                    // 获取和处理取款申请
-                    "/process",
-                    "/get_unprocessed",
-                    //删除资源
-                    "/del_resource"
-                ];
-                if restricted_urls.iter().any(|url| req.uri().path().starts_with(url)) {
-                    res.status_code(StatusCode::FORBIDDEN);
-                    res.render("Access forbidden for this URL.");
-                    return;
-                }else{
+                if !req.uri().path().starts_with("/admin") && !req.uri().path().starts_with("/ordinary"){
+                    let res = BaseResponse{
+                        code: 403,
+                        msg: "Access forbidden for this URL.".to_string(),
+                        data: None,
+                    };
+                    res.render(Json(res)).await;
+                }else {
+                    ctrl.call_next(req, depot, res).await;
+                }
+                // let restricted_urls = [
+                //     // 禁用或启用管理员账号
+                //     "/create",
+                //     "/disable_admin",
+                //     "/enable_admin",
+                //     "/all_admin",
+                //     // 获取和处理取款申请
+                //     "/process",
+                //     "/get_unprocessed",
+                //     //删除资源
+                //     "/del_resource"
+                // ];
+                // if restricted_urls.iter().any(|url| req.uri().path().starts_with(url)) {
+                //     res.status_code(StatusCode::FORBIDDEN);
+                //     res.render("Access forbidden for this URL.");
+                //     return;
+                // }else{
+                //     ctrl.call_next(req, depot, res).await;
+                // }
+
+            }else if admin_user.role == 2{
+                if !req.uri().path().starts_with("/ordinary"){
+                    let res = BaseResponse{
+                        code: 403,
+                        msg: "Access forbidden for this URL.".to_string(),
+                        data: None,
+                    };
+                    res.render(Json(res)).await;
+                }else {
                     ctrl.call_next(req, depot, res).await;
                 }
             }else {
