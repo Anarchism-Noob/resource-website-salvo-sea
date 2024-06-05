@@ -27,8 +27,8 @@ use uuid::Uuid;
 #[endpoint(tags("获取菜单列表"))]
 pub async fn get_menu(depot: &mut Depot) -> AppWriter<Vec<MenuListResponse>> {
     print!("{:?}", depot);
-
     let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
     let uuid = &jwt_model.claims.user_id;
     let _result = sys_menu_service::get_menu_list(&uuid).await;
     return AppWriter(_result);

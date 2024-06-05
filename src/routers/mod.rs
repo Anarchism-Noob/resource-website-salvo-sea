@@ -33,9 +33,6 @@ pub fn router() -> Router {
         auth_router_system_temp =
             auth_router_system_temp.push(Router::with_path("/api/system").push(sub_router));
     }
-    for sub_router in auth_system_api() {
-        system_router = system_router.push(Router::with_path("/api/system").push(sub_router));
-    }
     // 客户端添加API路由
     for sub_router in no_auth_custom_api() {
         no_auth_router_client_temp =
