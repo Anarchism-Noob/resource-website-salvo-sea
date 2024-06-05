@@ -13,7 +13,7 @@ use crate::controller::{
             get_custom_list, get_history_data, get_token_profile, all_withdraw,
             all_unprocessed, post_login, post_register_admin, pchange_pwd,
             change_profile, put_recharge, upload_avatar, put_withdraw,
-            put_process,
+            put_process, get_menu,
         },
         website_controller::{
             get_admin_bg, get_website_profile, update_website_profile,
@@ -36,7 +36,7 @@ pub fn auth_system_api() -> Vec<Router> {
         // 查看取款申请历史数据
         Router::with_path("/ordinary/manager/token_user/all_withdrawl").get(all_withdraw),
         // 当前登录账号能使用的菜单项
-        // Router::with_path("/ordinary/token_user/menu").get(get_menu),
+        Router::with_path("/ordinary/token_user/menu").get(get_menu),
         // 管理员账号管理
         // 创建一个管理员账号
         Router::with_path("/super/manager/admin/create").post(post_register_admin),
@@ -46,7 +46,7 @@ pub fn auth_system_api() -> Vec<Router> {
         Router::with_path("/super/manager/admin/disable_admin").post(disable_admin),
         // 启用一个管理员账号
         Router::with_path("/super/manager/admin/enable_admin").post(enable_admin),
-        //Router::with_path("//manager/admin/delete_admin").delete(del_admin),
+        //Router::with_path("/manager/admin/delete_admin").delete(del_admin),
         // 用户账号管理
         // 查看所有用户
         Router::with_path("/admin/manager/custom/all_custom").get(get_custom_list),
@@ -100,7 +100,7 @@ pub fn auth_system_api() -> Vec<Router> {
         //Router::with_path("/manager/carousel/detail").get(detail_carousel)
         // 上传统一管理
         // 上传资源图片
-        Router::with_path("/upload/resource_image").post(put_upload_image),、
+        Router::with_path("/upload/resource_image").post(put_upload_image),
         // 上传轮播图
         Router::with_path("/upload/carousel_image").post(upload_carousel),
         // 上传资源描述文件

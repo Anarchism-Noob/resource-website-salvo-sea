@@ -3,6 +3,7 @@ mod custom;
 
 use self::admin::{auth_system_api, no_auth_system_api};
 use self::custom::{auth_custom_api, no_auth_custom_api};
+use crate::middleware::jwt::jwt_middleware;
 use crate::middleware::jwt_auth::jwt_auth_middleware;
 use salvo::{
     oapi::OpenApi,
@@ -62,7 +63,8 @@ pub fn router() -> Router {
         .unshift(no_auth_router_system_temp)
         .push(
             Router::new()
-            .hoop(jwt_auth_middleware)
+            .hoop(jwt_middleware())//
+            .hoop(jwt_auth_middleware)//api验证
             .push(auth_router_system_temp)
         )
         .unshift(system_doc.into_router("/system-doc/openapi.json"))
@@ -76,8 +78,8 @@ pub fn router() -> Router {
         .unshift(no_auth_router_client_temp)
         .push(
             Router::new()
-            .hoop(jwt_auth_middleware)
             .push(auth_router_client_temp)
+            .hoop(jwt_auth_middleware)
         )
         .unshift(custom_doc.into_router("/custom-doc/openapi.json"))
         .unshift(

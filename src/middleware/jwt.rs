@@ -1,7 +1,7 @@
 use crate::config::CFG;
 use anyhow::Result;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, EncodingKey, Validation};
-use salvo::jwt_auth::{ConstDecoder, CookieFinder, HeaderFinder, QueryFinder};
+use salvo::jwt_auth::{ConstDecoder, HeaderFinder};
 use salvo::prelude::*;
 use serde::{Deserialize, Serialize};
 use time::{Duration, OffsetDateTime};
@@ -22,8 +22,8 @@ pub fn jwt_middleware() -> JwtAuth<JwtClaims, ConstDecoder> {
     ))
     .finders(vec![
         Box::new(HeaderFinder::new()),
-        Box::new(QueryFinder::new("token")),
-        Box::new(CookieFinder::new("jwt_token")),
+        // Box::new(QueryFinder::new("jwt_token")),
+        // Box::new(CookieFinder::new("jwt_token")),
     ])
     .force_passed(false);
     auth_handler

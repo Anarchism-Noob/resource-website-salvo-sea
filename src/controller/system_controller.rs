@@ -4,28 +4,36 @@ use crate::{
         count_data_dto::CountDataResponse,
         custom_user_dto::{CustomUserProfileResponse, RechargeOfAdminRequest},
         query_struct::BodyStructOfDE,
+        sys_menus_dto::MenuListResponse,
         sys_user_dto::{
             ChangeAdminProfileRequest, ChangeAdminPwdRequest, SysLoginRequest, SysLoginResponse,
             SysUserCrateRequest, SysUserProfileResponse,
         },
         withdrawals_dto::WithdrawalsResponse,
     },
-    middleware::jwt,
-    services::admin_user_service,
+    middleware::jwt::{self, JwtClaims},
+    services::{admin_user_service, sys_menu_service},
     utils::app_error::AppError,
 };
 use salvo::{
     http::StatusCode,
-    oapi::{
-        endpoint,
-        extract::JsonBody,
-    },
+    oapi::{endpoint, extract::JsonBody},
     prelude::*,
     Request, Response, Writer,
 };
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
+#[endpoint(tags("获取菜单列表"))]
+pub async fn get_menu(depot: &mut Depot) -> AppWriter<Vec<MenuListResponse>> {
+    print!("{:?}", depot);
+
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    let uuid = &jwt_model.claims.user_id;
+    let _result = sys_menu_service::get_menu_list(&uuid).await;
+    return AppWriter(_result);
+}
+ 
 #[endpoint(tags("获取历史数据"))]
 pub async fn get_history_data(depot: &mut Depot) -> AppWriter<CountDataResponse> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
@@ -55,9 +63,7 @@ pub async fn put_process(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<
 }
 
 #[endpoint(tags("获取未处理的取款记录"))]
-pub async fn all_unprocessed(
-    depot: &mut Depot,
-) -> AppWriter<Vec<WithdrawalsResponse>> {
+pub async fn all_unprocessed(depot: &mut Depot) -> AppWriter<Vec<WithdrawalsResponse>> {
     let token = depot.get::<&str>("jwt_token").copied().unwrap();
     if let Err(err) = jwt::parse_token(token) {
         return AppError::AnyHow(err).into();
@@ -339,7 +345,7 @@ pub async fn pchange_pwd(
 pub async fn post_login(
     form_data: JsonBody<SysLoginRequest>,
     // res: &mut Response
-)-> AppWriter<SysLoginResponse> {
+) -> AppWriter<SysLoginResponse> {
     let form_data = form_data.0;
     println!("用户：{}正在登录", form_data.user_name.clone());
     let result: AppResult<SysLoginResponse> = admin_user_service::login(form_data).await;
@@ -357,7 +363,7 @@ pub async fn post_login(
         Err(err) => {
             return AppWriter(Err(AppError::AnyHow(err.into())));
             // ErrorResponseBuilder::with_err(err).into_response(res);
-        },
+        }
     }
 }
 

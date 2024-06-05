@@ -8,6 +8,7 @@ pub mod custom_recharge;
 pub mod custom_user;
 pub mod sys_carousel;
 pub mod sys_image;
+pub mod sys_menus;
 pub mod sys_resource_category;
 pub mod sys_resource_images;
 pub mod sys_resource_language;

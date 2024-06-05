@@ -6,6 +6,7 @@ pub use super::custom_recharge::Entity as CustomRecharge;
 pub use super::custom_user::Entity as CustomUser;
 pub use super::sys_carousel::Entity as SysCarousel;
 pub use super::sys_image::Entity as SysImage;
+pub use super::sys_menus::Entity as SysMenus;
 pub use super::sys_resource_category::Entity as SysResourceCategoty;
 pub use super::sys_resource_images::Entity as SysResourceImages;
 pub use super::sys_resource_language::Entity as SysResourceLanguage;

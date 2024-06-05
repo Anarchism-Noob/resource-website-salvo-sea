@@ -13,7 +13,7 @@ once_cell = "1.19.0"
 rand = { version = "0.8.5", features = [] }
 redis = { version = "0.25.3", features = [] }
 rust-embed = "8.4.0"
-salvo = { version = "0.67.2", features = [
+salvo = { version = "0.68.0", features = [
     "quinn",
     "anyhow",
     "logging",

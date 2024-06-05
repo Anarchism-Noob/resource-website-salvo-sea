@@ -7,6 +7,7 @@ pub mod sys_carousel_dto;
 pub mod sys_category_dto;
 pub mod sys_image_dto;
 pub mod sys_language_dto;
+pub mod sys_menus_dto;
 pub mod sys_resource_images_dto;
 pub mod sys_resources_dto;
 pub mod sys_user_dto;
