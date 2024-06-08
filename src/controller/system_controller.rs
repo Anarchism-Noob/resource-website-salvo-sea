@@ -24,6 +24,17 @@ use salvo::{
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
 
+
+// 用于将解码后的认证数据插入到 depot 的键。
+pub const JWT_AUTH_DATA_KEY: &str = "::salvo::Jwt_auth::auth_data";
+// 用于将认证状态数据插入到 depot 的键。
+pub const JWT_AUTH_STATE_KEY: &str = "::salvo::jwt_auth::auth_state";
+// 用于将认证令牌数据插入到 depot 的键。
+pub const JWT_AUTH_TOKEN_KEY: &str ="::salvo::jwt_auth::auth_token";
+// 用于将认证错误插入到 depot 的键。
+pub const JWT_AUTH_ERROR_KEY: &str ="::salvo::jwt_auth::auth_error";
+
+
 #[endpoint(tags("获取菜单列表"))]
 pub async fn get_menu(depot: &mut Depot) -> AppWriter<Vec<MenuListResponse>> {
     print!("{:?}", depot);

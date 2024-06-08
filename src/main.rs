@@ -81,7 +81,7 @@ async fn main() {
         false => {
             println!("🔓 SSL is disabled");
             println!(
-                "📖 System Open API Page: http://{}/api/system/system-api",
+                "📖 System Open API Page: http://{}/api/system/swagger-ui",
                 &CFG.server.address.replace("0.0.0.0", "127.0.0.1")
             );
             println!(

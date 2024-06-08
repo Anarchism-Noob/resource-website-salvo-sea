@@ -2,7 +2,7 @@ use salvo::prelude::ToSchema;
 use serde::Serialize;
 use validator::Validate;
 
-#[derive(Serialize, Debug, Validate, ToSchema, Default)]
+#[derive(Serialize, Debug, Validate, ToSchema,Clone, Default)]
 #[salvo(schema(rename_all = "camelCase"))]
 #[serde(rename_all = "camelCase")]
 pub struct MenuListResponse {

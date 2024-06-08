@@ -1,20 +1,8 @@
-use crate::config::CFG;
 use crate::dtos::sys_user_dto::BaseResponse;
 use crate::middleware::jwt::JwtClaims;
 use crate::utils::check_user::{check_user_admin, check_user_custom};
-use salvo::jwt_auth::{ConstDecoder, HeaderFinder};
 use salvo::prelude::*;
 use uuid::Uuid;
-
-
-// 用于将解码后的认证数据插入到 depot 的键。
-pub const JWT_AUTH_DATA_KEY: &str = "::salvo::Jwt_auth::auth_data";
-// 用于将认证状态数据插入到 depot 的键。
-pub const JWT_AUTH_STATE_KEY: &str = "::salvo::jwt_auth::auth_state";
-// 用于将认证令牌数据插入到 depot 的键。
-pub const JWT_AUTH_TOKEN_KEY: &str ="::salvo::jwt_auth::auth_token";
-// 用于将认证错误插入到 depot 的键。
-pub const JWT_AUTH_ERROR_KEY: &str ="::salvo::jwt_auth::auth_error";
 
 
 #[handler]
