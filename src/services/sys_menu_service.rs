@@ -3,13 +3,11 @@ use crate::{
     dtos::sys_menus_dto::MenuListResponse,
     entities::{
         prelude::{SysUser, SysMenus},
-        sys_user, sys_menus,
+        sys_menus,
     },
     utils::db::DB,
 };
 use sea_orm::*;
-use tracing::debug;
-use uuid::Uuid;
 
 pub async fn get_menu_list(uuid: &String) -> AppResult<Vec<MenuListResponse>> {
     let db = DB.get().ok_or(anyhow::anyhow!("数据库连接失败"))?;

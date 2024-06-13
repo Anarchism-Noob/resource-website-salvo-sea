@@ -72,9 +72,9 @@ pub async fn super_admin_init() {
 }
 
 // 获取计数数据
-pub async fn get_history_data(_uuid: String) -> AppResult<CountDataResponse> {
+pub async fn get_history_data(_uuid: &String) -> AppResult<CountDataResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
-    let admin_query = SysUser::find_by_id(&_uuid).one(db).await?;
+    let admin_query = SysUser::find_by_id(_uuid).one(db).await?;
     if admin_query.is_none() {
         return Err(anyhow::anyhow!("用户不存在").into());
     }
@@ -98,7 +98,7 @@ pub async fn get_history_data(_uuid: String) -> AppResult<CountDataResponse> {
 }
 
 // 处理取款申请
-pub async fn post_withdraw_process(withdrawals_uuid: String, uuid: String) -> AppResult<()> {
+pub async fn post_withdraw_process(withdrawals_uuid: String, uuid: &String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     // 查找未处理的取款记录
     let withdrawals_query = withdrawals::Entity::find_by_id(&withdrawals_uuid)
@@ -111,7 +111,7 @@ pub async fn post_withdraw_process(withdrawals_uuid: String, uuid: String) -> Ap
     withdrawals_model.update(db).await?;
     // 将扣除的手续费存入superadmin的余额
     // 查询superadmin
-    let super_admin_query = SysUser::find_by_id(&uuid).one(db).await?;
+    let super_admin_query = SysUser::find_by_id(uuid).one(db).await?;
     // 判断是否是超级管理员
     if super_admin_query.clone().unwrap().role != 0 {
         return Err(anyhow::anyhow!("没有权限").into());
@@ -133,11 +133,11 @@ pub async fn post_withdraw_process(withdrawals_uuid: String, uuid: String) -> Ap
 
 // 获取未处理的取款记录
 pub async fn get_withdrawals_list_unprocessed(
-    _uuid: String,
+    _uuid: &String,
 ) -> AppResult<Vec<WithdrawalsResponse>> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     //获取当前用户信息
-    let admin_query = SysUser::find_by_id(&_uuid).one(db).await?;
+    let admin_query = SysUser::find_by_id(_uuid).one(db).await?;
     if admin_query.is_none() {
         return Err(anyhow::anyhow!("用户不存在").into());
     } else if admin_query.clone().unwrap().role != 0 {
@@ -164,7 +164,7 @@ pub async fn get_withdrawals_list_unprocessed(
 }
 
 // 获取当前用户的取款记录
-pub async fn get_withdrawals_list(uuid: String) -> AppResult<Vec<WithdrawalsResponse>> {
+pub async fn get_withdrawals_list(uuid: &String) -> AppResult<Vec<WithdrawalsResponse>> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let query = Withdrawals::find()
         .filter(withdrawals::Column::UserUuid.eq(uuid))
@@ -192,9 +192,9 @@ pub async fn get_withdrawals_list(uuid: String) -> AppResult<Vec<WithdrawalsResp
 }
 
 // 取款申请
-pub async fn post_withdrawals(req: u64, uuid: String) -> AppResult<()> {
+pub async fn post_withdrawals(req: u64, uuid: &String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
-    let admin_query = SysUser::find_by_id(&uuid).one(db).await?;
+    let admin_query = SysUser::find_by_id(uuid).one(db).await?;
     let admin_model = admin_query.clone().unwrap();
     if admin_model.role == 0 {
         return Err(anyhow::anyhow!("超级管理员没有取款功能").into());
@@ -222,10 +222,12 @@ pub async fn post_withdrawals(req: u64, uuid: String) -> AppResult<()> {
     change_model.balance = Set(balance);
     change_model.update(db).await?;
 
+    let token_uuid = uuid.clone();
+
     // 创建取款记录对象
     let withdrawal_model = withdrawals::ActiveModel {
         uuid: Set(Uuid::new_v4().to_string()),
-        user_uuid: Set(uuid),
+        user_uuid: Set(token_uuid),
         quantities: Set(req),
         arrive: Set(aarrive),
         create_date: Set(Local::now().naive_utc()),
@@ -254,7 +256,7 @@ pub async fn post_withdrawals(req: u64, uuid: String) -> AppResult<()> {
 // 手动充值
 pub async fn recharge_for_custom(
     from_data: RechargeOfAdminRequest,
-    admin_uuid: String,
+    admin_uuid: &String,
 ) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
@@ -302,7 +304,7 @@ pub async fn recharge_for_custom(
 }
 
 // 禁用管理员账号
-pub async fn disable_admin_user(admin_uuid: String, token_uuid: String) -> AppResult<()> {
+pub async fn disable_admin_user(admin_uuid: String, token_uuid: &String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let depot_query = SysUser::find_by_id(token_uuid).one(db).await?;
     let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
@@ -329,7 +331,7 @@ pub async fn disable_admin_user(admin_uuid: String, token_uuid: String) -> AppRe
 }
 
 // 解禁管理员账号
-pub async fn enable_admin_user(admin_uuid: String, token_uuid: String) -> AppResult<()> {
+pub async fn enable_admin_user(admin_uuid: String, token_uuid: &String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let depot_query = SysUser::find_by_id(token_uuid).one(db).await?;
     let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
@@ -355,7 +357,7 @@ pub async fn enable_admin_user(admin_uuid: String, token_uuid: String) -> AppRes
     Ok(())
 }
 // 禁用自定义用户
-pub async fn disable_custom_user(custom_uuid: String, admin_uuid: String) -> AppResult<()> {
+pub async fn disable_custom_user(custom_uuid: String, admin_uuid: &String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     // 检查管理员权限
     let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
@@ -380,7 +382,7 @@ pub async fn disable_custom_user(custom_uuid: String, admin_uuid: String) -> App
 }
 
 // 解禁自定义用户
-pub async fn enable_custom_user(custom_uuid: String, admin_uuid: String) -> AppResult<()> {
+pub async fn enable_custom_user(custom_uuid: String, admin_uuid: &String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let admin_query = SysUser::find_by_id(admin_uuid).one(db).await?;
     if admin_query.unwrap().role > 1 {
@@ -402,7 +404,7 @@ pub async fn enable_custom_user(custom_uuid: String, admin_uuid: String) -> AppR
 // 更改当前用户信息
 pub async fn change_profile(
     form_data: ChangeAdminProfileRequest,
-    uuid: String,
+    uuid: &String,
 ) -> AppResult<SysUserProfileResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     // 查询当前用户信息
@@ -433,7 +435,7 @@ pub async fn change_profile(
 }
 
 // 保存头像
-pub async fn save_avatar(avatar_path: String, uuid: String) -> AppResult<SysUserProfileResponse> {
+pub async fn save_avatar(avatar_path: String, uuid: &String) -> AppResult<SysUserProfileResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let user_query = SysUser::find_by_id(uuid).one(db).await?;
     let mut user_model: sys_user::ActiveModel = user_query.unwrap().clone().into();
@@ -466,7 +468,7 @@ pub async fn check_user_name(req: String) -> AppResult<()> {
 // 更改当前用户密码
 pub async fn change_admin_password(
     form_data: ChangeAdminPwdRequest,
-    uuid: String,
+    uuid: &String,
 ) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let user_query = SysUser::find_by_id(uuid).one(db).await?;
@@ -482,7 +484,7 @@ pub async fn change_admin_password(
 }
 
 // 创建管理员或挂售个商
-pub async fn create_admin_user(from_data: SysUserCrateRequest, uuid: String) -> AppResult<()> {
+pub async fn create_admin_user(from_data: SysUserCrateRequest, uuid: &String) -> AppResult<()> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     if from_data.role == 0 {
         return Err(anyhow::anyhow!("超级管理员无法创建其他超级管理员").into());
@@ -549,7 +551,7 @@ pub async fn login(form_data: SysLoginRequest) -> AppResult<SysLoginResponse> {
 
 
 // 查看当前用户详情
-pub async fn get_admin_profile(user_uuid: String) -> AppResult<SysUserProfileResponse> {
+pub async fn get_admin_profile(user_uuid: &String) -> AppResult<SysUserProfileResponse> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let user_query = match SysUser::find()
         .filter(sys_user::Column::UserUuid.eq(user_uuid))
@@ -576,7 +578,7 @@ pub async fn get_admin_profile(user_uuid: String) -> AppResult<SysUserProfileRes
 }
 
 // 查看自定义用户列表
-pub async fn list_custom_user(uuid: String) -> AppResult<Vec<CustomUserProfileResponse>> {
+pub async fn list_custom_user(uuid: &String) -> AppResult<Vec<CustomUserProfileResponse>> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let user_query = SysUser::find()
         .filter(sys_user::Column::UserUuid.eq(uuid))
@@ -626,7 +628,7 @@ pub async fn list_custom_user(uuid: String) -> AppResult<Vec<CustomUserProfileRe
     Ok(custom_res)
 }
 
-pub async fn list_admin_user(uuid: String) -> AppResult<Vec<SysUserProfileResponse>> {
+pub async fn list_admin_user(uuid: &String) -> AppResult<Vec<SysUserProfileResponse>> {
     let db = DB.get().ok_or("数据库连接失败").unwrap();
     let user_query = SysUser::find()
         .filter(sys_user::Column::UserUuid.eq(uuid))

@@ -2,8 +2,6 @@ use crate::dtos::sys_user_dto::BaseResponse;
 use crate::middleware::jwt::JwtClaims;
 use crate::utils::check_user::{check_user_admin, check_user_custom};
 use salvo::prelude::*;
-use uuid::Uuid;
-
 
 #[handler]
 pub async fn jwt_auth_middleware(

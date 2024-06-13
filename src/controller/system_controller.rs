@@ -11,7 +11,7 @@ use crate::{
         },
         withdrawals_dto::WithdrawalsResponse,
     },
-    middleware::jwt::{self, JwtClaims},
+    middleware::jwt::JwtClaims,
     services::{admin_user_service, sys_menu_service},
     utils::app_error::AppError,
 };
@@ -37,36 +37,32 @@ pub const JWT_AUTH_ERROR_KEY: &str ="::salvo::jwt_auth::auth_error";
 
 #[endpoint(tags("获取菜单列表"))]
 pub async fn get_menu(depot: &mut Depot) -> AppWriter<Vec<MenuListResponse>> {
-    print!("{:?}", depot);
+    // dbg!(depot);
     let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
     dbg!(jwt_model);
     let uuid = &jwt_model.claims.user_id;
-    let _result = sys_menu_service::get_menu_list(&uuid).await;
+    //
+    let _result = sys_menu_service::get_menu_list(uuid).await;
     return AppWriter(_result);
 }
  
 #[endpoint(tags("获取历史数据"))]
 pub async fn get_history_data(depot: &mut Depot) -> AppWriter<CountDataResponse> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    // 
     let _result = admin_user_service::get_history_data(uuid).await;
     AppWriter(_result)
 }
 
 #[endpoint(tags("处理取款申请"))]
 pub async fn put_process(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
 
     let withdraw_uuid = req.0;
     let _result = admin_user_service::post_withdraw_process(withdraw_uuid, uuid).await;
@@ -75,38 +71,33 @@ pub async fn put_process(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<
 
 #[endpoint(tags("获取未处理的取款记录"))]
 pub async fn all_unprocessed(depot: &mut Depot) -> AppWriter<Vec<WithdrawalsResponse>> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    //
     let _result = admin_user_service::get_withdrawals_list_unprocessed(uuid).await;
     AppWriter(_result)
 }
 
 #[endpoint(tags("获取当前用户的取款记录"))]
 pub async fn all_withdraw(depot: &mut Depot) -> AppWriter<Vec<WithdrawalsResponse>> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    //
     let _result = admin_user_service::get_withdrawals_list(uuid).await;
     AppWriter(_result)
 }
 
 #[endpoint(tags("取款申请"))]
 pub async fn put_withdraw(req: JsonBody<u64>, depot: &mut Depot) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    // 
     let _result = admin_user_service::post_withdrawals(req.0, uuid).await;
     AppWriter(_result)
 }
@@ -116,13 +107,11 @@ pub async fn put_recharge(
     form_data: JsonBody<RechargeOfAdminRequest>,
     depot: &mut Depot,
 ) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    //
     let get_request = form_data.0;
     let result = admin_user_service::recharge_for_custom(get_request, uuid).await;
     AppWriter(result)
@@ -133,13 +122,10 @@ pub async fn disable_admin(
     admin_uuid: JsonBody<BodyStructOfDE>,
     depot: &mut Depot,
 ) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
     // 获取被禁用账号的uuid
     let disable_uuid = admin_uuid.d_e_uuid.clone();
     let _result = admin_user_service::disable_admin_user(disable_uuid.unwrap(), uuid).await;
@@ -151,13 +137,10 @@ pub async fn enable_admin(
     admin_uuid: JsonBody<BodyStructOfDE>,
     depot: &mut Depot,
 ) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
     // 获取被启用用账号的uuid
     let enable_uuid = admin_uuid.d_e_uuid.clone();
 
@@ -170,14 +153,11 @@ pub async fn disable_custom(
     custom_uuid: JsonBody<BodyStructOfDE>,
     depot: &mut Depot,
 ) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    //
     let disable_uuid = custom_uuid.d_e_uuid.clone();
 
     let _result = admin_user_service::disable_custom_user(disable_uuid.unwrap(), uuid).await;
@@ -189,13 +169,11 @@ pub async fn enable_custom(
     custom_uuid: JsonBody<BodyStructOfDE>,
     depot: &mut Depot,
 ) -> AppWriter<()> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    //
     let enable_uuid = custom_uuid.d_e_uuid.clone();
 
     let _result = admin_user_service::enable_custom_user(enable_uuid.unwrap(), uuid).await;
@@ -204,28 +182,22 @@ pub async fn enable_custom(
 
 #[endpoint(tags("获取管理员列表"))]
 pub async fn get_admin_list(depot: &mut Depot) -> AppWriter<Vec<SysUserProfileResponse>> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    //
     let _result = admin_user_service::list_admin_user(uuid).await;
     AppWriter(_result)
 }
 
 #[endpoint(tags("获取用户列表"))]
 pub async fn get_custom_list(depot: &mut Depot) -> AppWriter<Vec<CustomUserProfileResponse>> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    //
     let _result = admin_user_service::list_custom_user(uuid).await;
     AppWriter(_result)
 }
@@ -235,14 +207,11 @@ pub async fn change_profile(
     form_data: JsonBody<ChangeAdminProfileRequest>,
     depot: &mut Depot,
 ) -> AppWriter<SysUserProfileResponse> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    //
 
     let get_request = form_data.0;
     let result = admin_user_service::change_profile(get_request, uuid).await;
@@ -252,14 +221,11 @@ pub async fn change_profile(
 // 获取用户详细信息
 #[endpoint(tags("获取当前用户详情"))]
 pub async fn get_token_profile(depot: &mut Depot) -> AppWriter<SysUserProfileResponse> {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return AppError::AnyHow(err).into();
-    }
-
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    //
     let _result = admin_user_service::get_admin_profile(uuid).await;
     AppWriter(_result)
 }
@@ -267,14 +233,11 @@ pub async fn get_token_profile(depot: &mut Depot) -> AppWriter<SysUserProfileRes
 // 头像上传功能
 #[endpoint(tags("将头像保存到服务器"))]
 pub async fn upload_avatar(req: &mut Request, depot: &mut Depot, res: &mut Response) {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
-    }
-
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    // dbg!(depot);
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    //
 
     // 创建一个uploads目录，用于保存上传的文件
     let file = req.file("avatar").await;
@@ -323,13 +286,10 @@ pub async fn pchange_pwd(
     depot: &mut Depot,
     res: &mut Response,
 ) {
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
-    }
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    //
 
     let user_req = req.0;
     let result = admin_user_service::change_admin_password(user_req, uuid).await;
@@ -385,14 +345,10 @@ pub async fn post_register_admin(
     res: &mut Response,
 ) {
     let _model = form_data.0;
-    let token = depot.get::<&str>("jwt_token").copied().unwrap();
-
-    if let Err(err) = jwt::parse_token(token) {
-        return ErrorResponseBuilder::with_err(AppError::AnyHow(err)).into_response(res);
-    }
-
-    let jwt_model = jwt::parse_token(token).unwrap();
-    let uuid = jwt_model.user_id;
+    let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
+    dbg!(jwt_model);
+    let uuid = &jwt_model.claims.user_id;
+    //
 
     if let Err(err) = admin_user_service::check_user_name(_model.user_name.clone()).await {
         return ErrorResponseBuilder::with_err(AppError::AnyHow(err.into())).into_response(res);
