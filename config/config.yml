@@ -9,7 +9,7 @@ database:
   database_url: "mysql://root:99158194@117.68.45.42:38326/resource_website"
 
 cache:
-  redis_url: "redis://localhost:6379"
+  redis_url: "redis://117.68.45.45:47252"
 #  redis_url: "redis://:密码@localhost:6379"
 
 jwt:

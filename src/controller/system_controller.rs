@@ -6,8 +6,7 @@ use crate::{
         query_struct::BodyStructOfDE,
         sys_menus_dto::MenuListResponse,
         sys_user_dto::{
-            ChangeAdminProfileRequest, ChangeAdminPwdRequest, SysLoginRequest, SysLoginResponse,
-            SysUserCrateRequest, SysUserProfileResponse,
+            BaseResponse, ChangeAdminProfileRequest, ChangeAdminPwdRequest, SysLoginRequest, SysLoginResponse, SysUserCrateRequest, SysUserProfileResponse
         },
         withdrawals_dto::WithdrawalsResponse,
     },
@@ -42,8 +41,14 @@ pub async fn get_menu(depot: &mut Depot) -> AppWriter<Vec<MenuListResponse>> {
     dbg!(jwt_model);
     let uuid = &jwt_model.claims.user_id;
     //
-    let _result = sys_menu_service::get_menu_list(uuid).await;
-    return AppWriter(_result);
+    match sys_menu_service::get_menu_list(uuid).await {
+        Ok(result) => AppWriter(Ok(result)),
+        Err(err) => {
+            AppWriter(Err(err))
+        }
+    }
+    // let _result = sys_menu_service::get_menu_list(uuid).await;
+    // return AppWriter(_result);
 }
  
 #[endpoint(tags("获取历史数据"))]
@@ -53,20 +58,44 @@ pub async fn get_history_data(depot: &mut Depot) -> AppWriter<CountDataResponse>
     dbg!(jwt_model);
     let uuid = &jwt_model.claims.user_id;
     // 
-    let _result = admin_user_service::get_history_data(uuid).await;
-    AppWriter(_result)
+    match admin_user_service::get_history_data(uuid).await {
+        Ok(result) => AppWriter(Ok(result)),
+        Err(err) => {
+            AppWriter(Err(err))
+        }
+    }
+    // let _result = admin_user_service::get_history_data(uuid).await;
+    // AppWriter(_result)
 }
 
 #[endpoint(tags("处理取款申请"))]
-pub async fn put_process(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<()> {
+pub async fn put_process(req: JsonBody<String>, depot: &mut Depot) -> AppWriter<BaseResponse> {
     // dbg!(depot);
     let jwt_model = depot.jwt_auth_data::<JwtClaims>().unwrap();
     dbg!(jwt_model);
     let uuid = &jwt_model.claims.user_id;
 
     let withdraw_uuid = req.0;
-    let _result = admin_user_service::post_withdraw_process(withdraw_uuid, uuid).await;
-    AppWriter(_result)
+    match admin_user_service::post_withdraw_process(withdraw_uuid, uuid).await {
+        Ok(result) =>{ 
+            let resp = BaseResponse {
+                code: 200,
+                msg: "处理成功".to_string(),
+                data: None,
+            };
+            AppWriter(Ok(resp))
+        },
+        Err(err) => {
+            // let resp = BaseResponse {
+            //     code: 500,
+            //     msg: "处理失败".to_string(),
+            //     data: None,
+            // };
+            AppWriter(Err(err))
+        }
+    }
+    // let _result = admin_user_service::post_withdraw_process(withdraw_uuid, uuid).await;
+    // AppWriter(_result)
 }
 
 #[endpoint(tags("获取未处理的取款记录"))]
