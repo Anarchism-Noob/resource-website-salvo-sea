@@ -1,0 +1,16 @@
+services:
+  mysql:
+    container_name: mysql
+    image: mysql
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: resource_website
+      MYSQL_ROOT_PASSWORD: 99158194
+    volumes:
+      - ./data/resource_website.sql:/docker-entrypoint-initdb.d/init.sql
+  redis:
+    container_name: redis
+    image: redis
+    ports:
+      - 6379:6379
