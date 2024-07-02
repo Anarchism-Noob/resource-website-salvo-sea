@@ -5,6 +5,7 @@ use crate::{
     utils::{app_error, app_writer, db::init_db_conn, redis_utils::get_redis_connection},
 };
 use config::{CERT_KEY, CFG};
+use middleware::init_casbin;
 use salvo::{
     catcher::Catcher,
     conn::rustls::{Keycert, RustlsConfig},
@@ -48,6 +49,9 @@ async fn main() {
     let service = service.catcher(Catcher::default().hoop(handle_404)); //.hoop(_cors_handler).hoop(handle_404));
     println!("🌪️ {} is starting ", &CFG.server.name);
     println!("🔄 listen on {}", &CFG.server.address);
+
+    init_casbin().await;
+
     let _cors_handler = cors_middleware();
     match CFG.server.ssl {
         true => {
