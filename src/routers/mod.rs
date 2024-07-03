@@ -3,13 +3,13 @@ mod custom;
 
 use self::admin::{auth_system_api, no_auth_system_api};
 use self::custom::{auth_custom_api, no_auth_custom_api};
+use crate::controller::system_user_controller::get_system_user;
 use crate::middleware::jwt::jwt_middleware;
 use crate::middleware::jwt_auth::jwt_auth_middleware;
 use salvo::{
     oapi::OpenApi,
     prelude::{CatchPanic, Logger, Router, SwaggerUi},
 };
-
 
 pub fn router() -> Router {
     // 创建新的Router实例
@@ -50,57 +50,61 @@ pub fn router() -> Router {
     // }
 
     // 创建并拼接API文档路由
-   
-   
 
+    system_router = system_router.unshift(no_auth_router_system_temp).push(
+        Router::new()
+            .hoop(jwt_middleware()) //
+            .hoop(jwt_auth_middleware) //api验证
+            .push(auth_router_system_temp),
+    );
+    // .unshift(system_doc.into_router("/system-doc/openapi.json"))
+    // .unshift(
+    //     SwaggerUi::new("/system-doc/openapi.json")
+    //             .title("RSWS System API")
+    //             .into_router("/api/system/swagger-ui"),
+    // );
 
-    system_router = system_router
-        .unshift(no_auth_router_system_temp)
-        .push(
-            Router::new()
-            .hoop(jwt_middleware())//
-            .hoop(jwt_auth_middleware)//api验证
-            .push(auth_router_system_temp)
-        );
-        // .unshift(system_doc.into_router("/system-doc/openapi.json"))
-        // .unshift(
-        //     SwaggerUi::new("/system-doc/openapi.json")
-        //             .title("RSWS System API")
-        //             .into_router("/api/system/swagger-ui"),
-        // );
+    let system_doc = OpenApi::new("RSWS System API", "0.1.1").merge_router(&system_router);
+    // println!("System API JSON:{:?}", system_doc);
 
-        let system_doc = OpenApi::new("RSWS System API", "0.1.1").merge_router(&system_router);
-        // println!("System API JSON:{:?}", system_doc);
-
-    client_router = client_router
-        .unshift(no_auth_router_client_temp)
-        .push(
-            Router::new()
+    client_router = client_router.unshift(no_auth_router_client_temp).push(
+        Router::new()
             .push(auth_router_client_temp)
-            .hoop(jwt_auth_middleware)
-        );
-        // .unshift(custom_doc.into_router("/custom-doc/openapi.json"))
-        // .unshift(
-        //     SwaggerUi::new("/custom-doc/openapi.json")
-        //             .title("RSWS Client API")
-        //             .into_router("/api/custom/swagger-ui"),
-        // );
-    
-        let custom_doc = OpenApi::new("RSWS Client API", "0.1.1").merge_router(&client_router);
-        // println!("Custom API JSON:{:?}", custom_doc);
+            .hoop(jwt_auth_middleware),
+    );
+    // .unshift(custom_doc.into_router("/custom-doc/openapi.json"))
+    // .unshift(
+    //     SwaggerUi::new("/custom-doc/openapi.json")
+    //             .title("RSWS Client API")
+    //             .into_router("/api/custom/swagger-ui"),
+    // );
 
+    let custom_doc = OpenApi::new("RSWS Client API", "0.1.1").merge_router(&client_router);
+    // println!("Custom API JSON:{:?}", custom_doc);
 
     router = router
         .hoop(Logger::new())
         .hoop(CatchPanic::new())
-        
         // .hoop(cors_middleware())
         .unshift(client_router)
         .push(custom_doc.into_router("/custom-doc/openapi.json"))
-        .push(SwaggerUi::new("/custom-doc/openapi.json").title("RSWS Client API").into_router("/api/custom/swagger-ui"))
+        .push(
+            SwaggerUi::new("/custom-doc/openapi.json")
+                .title("RSWS Client API")
+                .into_router("/api/custom/swagger-ui"),
+        )
         .unshift(system_router)
+        .unshift(
+            Router::new()
+                .path("/api/v1")
+                .push(Router::with_path("/system-user/get").get(get_system_user)),
+        )
         .push(system_doc.into_router("/system-doc/openapi.json"))
-        .push(SwaggerUi::new("/system-doc/openapi.json").title("RSWS System API").into_router("/api/system/swagger-ui"));
+        .push(
+            SwaggerUi::new("/system-doc/openapi.json")
+                .title("RSWS System API")
+                .into_router("/api/system/swagger-ui"),
+        );
 
     router
 }
