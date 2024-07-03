@@ -3,9 +3,10 @@ mod custom;
 
 use self::admin::{auth_system_api, no_auth_system_api};
 use self::custom::{auth_custom_api, no_auth_custom_api};
-use crate::controller::system_user_controller::get_system_user;
+use crate::controller::system_user_controller::{create_system_user, get_system_user};
 use crate::middleware::jwt::jwt_middleware;
 use crate::middleware::jwt_auth::jwt_auth_middleware;
+use crate::services::admin_user_service::create_admin_user;
 use salvo::{
     oapi::OpenApi,
     prelude::{CatchPanic, Logger, Router, SwaggerUi},
@@ -98,6 +99,11 @@ pub fn router() -> Router {
             Router::new()
                 .path("/api/v1")
                 .push(Router::with_path("/system-user/get").get(get_system_user)),
+        )
+        .unshift(
+            Router::new()
+                .path("/api/v1")
+                .push(Router::with_path("/system-user/create").post(create_system_user)),
         )
         .push(system_doc.into_router("/system-doc/openapi.json"))
         .push(

@@ -26,6 +26,7 @@ mod services;
 mod utils;
 mod common;
 mod cerror;
+mod constant;
 
 #[tokio::main]
 async fn main() {

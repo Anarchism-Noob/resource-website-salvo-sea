@@ -1,9 +1,14 @@
-use crate::{cerror::CodeError, dtos::system_user_dto::{
-    CreateSystemUserRequest, CreateSystemUserResponse, DeleteSystemUserRequest,
-    DeleteSystemUserResponse, GetSystemUserRequest, GetSystemUserResponse, ListSystemUserRequest,
-    ListSystemUserResponse, PageSystemUserRequest, PageSystemUserResponse, UpdateSystemUserRequest,
-    UpdateSystemUserResponse,
-}};
+use tracing::field::debug;
+
+use crate::{
+    cerror::CodeError,
+    dtos::system_user_dto::{
+        CreateSystemUserRequest, CreateSystemUserResponse, DeleteSystemUserRequest,
+        DeleteSystemUserResponse, GetSystemUserRequest, GetSystemUserResponse,
+        ListSystemUserRequest, ListSystemUserResponse, PageSystemUserRequest,
+        PageSystemUserResponse, SystemUser, UpdateSystemUserRequest, UpdateSystemUserResponse,
+    },
+};
 
 pub async fn list_system_user(
     request: ListSystemUserRequest,
@@ -20,13 +25,26 @@ pub async fn page_system_user(
 pub async fn get_system_user(
     request: GetSystemUserRequest,
 ) -> anyhow::Result<GetSystemUserResponse, CodeError> {
-    unimplemented!()
+    dbg!("get_system_user request: {:#?}", request);
+    Ok(GetSystemUserResponse {
+        data: SystemUser {
+            id: "1".to_string(),
+            name: "test".to_string(),
+            nick_name: "test".to_string(),
+            email: "test@test.com".to_string(),
+            status: "active".to_string(),
+            avatar_url: "https://test.com/avatar.png".to_string(),
+        },
+    })
 }
 
 pub async fn create_system_user(
     request: CreateSystemUserRequest,
 ) -> anyhow::Result<CreateSystemUserResponse, CodeError> {
-    unimplemented!()
+    dbg!("create_system_user request: {:#?}", request);
+    Ok(CreateSystemUserResponse {
+        id: "1".to_string(),
+    })
 }
 
 pub async fn update_system_user(

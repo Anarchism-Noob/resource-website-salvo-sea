@@ -1,5 +1,5 @@
-use salvo::{writing::Json, Response};
-use serde::Serialize;
+use salvo::{writing::Json, Request, Response};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::cerror::CodeError;
 
@@ -12,7 +12,7 @@ where
     response_param.render(Json(&response::Response::ok(data)));
 }
 
-pub fn error(response_param: &mut Response, err: (i32, &'static str)) {
+pub fn failed(response_param: &mut Response, err: CodeError) {
     response_param.render(Json(&response::Response::<()>::err(err.0, err.1)));
 }
 
@@ -27,7 +27,17 @@ where
             success(response, data);
         }
         Err(err) => {
-            error(response, err);
+            failed(response, err);
         }
+    }
+}
+
+pub fn get_query_param<'a, T>(request: &'a mut Request) -> Option<T>
+where
+    T: DeserializeOwned,
+{
+    match request.parse_queries::<T>() {
+        Ok(param) => Some(param),
+        Err(_) => None,
     }
 }
