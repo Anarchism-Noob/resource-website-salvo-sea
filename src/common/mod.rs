@@ -1,5 +1,5 @@
-use salvo::{writing::Json, Request, Response};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use salvo::{writing::Json, Response};
+use serde::Serialize;
 
 use crate::cerror::CodeError;
 
@@ -29,15 +29,5 @@ where
         Err(err) => {
             failed(response, err);
         }
-    }
-}
-
-pub fn get_query_param<'a, T>(request: &'a mut Request) -> Option<T>
-where
-    T: DeserializeOwned,
-{
-    match request.parse_queries::<T>() {
-        Ok(param) => Some(param),
-        Err(_) => None,
     }
 }

@@ -6,3 +6,4 @@ pub mod check_user;
 pub mod db;
 pub mod rand_utils;
 pub mod redis_utils;
+pub mod snowflake;

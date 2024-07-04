@@ -1,4 +1,4 @@
 use super::CodeError;
 
-// user err code: 11000
-pub const ERR_LOGIN_USER: CodeError = (11001, "用户登陆失败");
+// user err code: 15000
+pub const ERR_USER_NOT_FOUND: CodeError = (15001, "用户不存在");

@@ -4,7 +4,7 @@ use tracing::error;
 use crate::{
     cerror::{ERR_REQUEST_PARAM_ERROR, ERR_REQUEST_PARAM_INVALID},
     common::{failed, resolve_code_error},
-    constant::{DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE},
+    constant::DEFAULT_PAGE_SIZE,
     dtos::system_user_dto::{
         CreateSystemUserRequest, DeleteSystemUserRequest, GetSystemUserRequest,
         ListSystemUserRequest, PageSystemUserRequest, UpdateSystemUserRequest,
@@ -33,11 +33,7 @@ pub async fn page_system_user(request: &mut Request, response: &mut Response) {
             failed(response, ERR_REQUEST_PARAM_INVALID);
         }
         Ok(mut request) => {
-            if !request.page_index.is_positive() {
-                request.page_index = DEFAULT_PAGE_INDEX;
-            }
-
-            if !request.page_size.is_positive() {
+            if request.page_size == 0 {
                 request.page_size = DEFAULT_PAGE_SIZE;
             }
 
@@ -54,8 +50,8 @@ pub async fn get_system_user(request: &mut Request, response: &mut Response) {
             failed(response, ERR_REQUEST_PARAM_INVALID);
         }
         Ok(request) => {
-            if request.id.trim().is_empty() {
-                error!("id is empty");
+            if request.id==0 {
+                error!("id is 0");
                 failed(response, ERR_REQUEST_PARAM_ERROR);
                 return;
             }
@@ -113,8 +109,8 @@ pub async fn update_system_user(request: &mut Request, response: &mut Response) 
             failed(response, ERR_REQUEST_PARAM_INVALID);
         }
         Ok(request) => {
-            if request.id.trim().is_empty() {
-                error!("id is empty");
+            if request.id==0 {
+                error!("id is 0");
                 failed(response, ERR_REQUEST_PARAM_ERROR);
                 return;
             }
@@ -159,8 +155,8 @@ pub async fn delete_system_user(request: &mut Request, response: &mut Response) 
             failed(response, ERR_REQUEST_PARAM_INVALID);
         }
         Ok(request) => {
-            if request.id.trim().is_empty() {
-                error!("id is empty");
+            if request.id==0 {
+                error!("id is 0");
                 failed(response, ERR_REQUEST_PARAM_ERROR);
                 return;
             }

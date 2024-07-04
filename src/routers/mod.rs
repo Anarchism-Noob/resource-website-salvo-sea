@@ -3,10 +3,19 @@ mod custom;
 
 use self::admin::{auth_system_api, no_auth_system_api};
 use self::custom::{auth_custom_api, no_auth_custom_api};
-use crate::controller::system_user_controller::{create_system_user, get_system_user};
+use crate::controller::casbin_resource_controller::{
+    create_casbin_resource, delete_casbin_resource, get_casbin_resource, list_casbin_resource,
+    page_casbin_resource, update_casbin_resource,
+};
+use crate::controller::system_role_controller::{
+    create_system_role, delete_system_role, get_system_role, page_system_role, update_system_role,
+};
+use crate::controller::system_user_controller::{
+    create_system_user, delete_system_user, get_system_user, list_system_user, page_system_user,
+    update_system_user,
+};
 use crate::middleware::jwt::jwt_middleware;
 use crate::middleware::jwt_auth::jwt_auth_middleware;
-use crate::services::admin_user_service::create_admin_user;
 use salvo::{
     oapi::OpenApi,
     prelude::{CatchPanic, Logger, Router, SwaggerUi},
@@ -98,12 +107,27 @@ pub fn router() -> Router {
         .unshift(
             Router::new()
                 .path("/api/v1")
-                .push(Router::with_path("/system-user/get").get(get_system_user)),
-        )
-        .unshift(
-            Router::new()
-                .path("/api/v1")
-                .push(Router::with_path("/system-user/create").post(create_system_user)),
+                // system user router
+                .push(Router::with_path("/system-user/list").get(list_system_user))
+                .push(Router::with_path("/system-user/page").get(page_system_user))
+                .push(Router::with_path("/system-user/get").get(get_system_user))
+                .push(Router::with_path("/system-user/create").post(create_system_user))
+                .push(Router::with_path("/system-user/update").put(update_system_user))
+                .push(Router::with_path("/system-user/delete").delete(delete_system_user))
+                // system role router
+                .push(Router::with_path("/system-role/list").get(page_system_user))
+                .push(Router::with_path("/system-role/page").get(page_system_role))
+                .push(Router::with_path("/system-role/get").get(get_system_role))
+                .push(Router::with_path("/system-role/create").post(create_system_role))
+                .push(Router::with_path("/system-role/update").put(update_system_role))
+                .push(Router::with_path("/system-role/delete").delete(delete_system_role))
+                // casbin resource router
+                .push(Router::with_path("/casbin-resource/list").get(list_casbin_resource))
+                .push(Router::with_path("/casbin-resource/page").get(page_casbin_resource))
+                .push(Router::with_path("/casbin-resource/get").get(get_casbin_resource))
+                .push(Router::with_path("/casbin-resource/create").post(create_casbin_resource))
+                .push(Router::with_path("/casbin-resource/update").put(update_casbin_resource))
+                .push(Router::with_path("/casbin-resource/delete").delete(delete_casbin_resource)),
         )
         .push(system_doc.into_router("/system-doc/openapi.json"))
         .push(

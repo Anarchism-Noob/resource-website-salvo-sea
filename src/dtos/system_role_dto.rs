@@ -2,8 +2,8 @@ use salvo::oapi::ToSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
-pub struct SystemRole {
-    pub id: String,
+pub struct SystemRoleDTO {
+    pub id: u64,
     pub name: String,
     pub r#type: String,
     pub desc: String,
@@ -14,28 +14,29 @@ pub struct ListSystemRoleRequest {}
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ListSystemRoleResponse {
-    pub data: Vec<SystemRole>,
+    pub data: Vec<SystemRoleDTO>,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct PageSystemRoleRequest {
-    pub page_index: i32,
-    pub page_size: i32,
+    pub page_index: u64,
+    pub page_size: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct PageSystemRoleResponse {
-    pub data: Vec<SystemRole>,
+    pub data: Vec<SystemRoleDTO>,
+    pub total: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct GetSystemRoleRequest {
-    pub id: String,
+    pub id: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct GetSystemRoleResponse {
-    pub data: SystemRole,
+    pub data: SystemRoleDTO,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -47,12 +48,12 @@ pub struct CreateSystemRoleRequest {
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct CreateSystemRoleResponse {
-    pub data: SystemRole,
+    pub id: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct UpdateSystemRoleRequest {
-    pub id: String,
+    pub id: u64,
     pub name: String,
     pub r#type: String,
     pub desc: String,
@@ -63,7 +64,7 @@ pub struct UpdateSystemRoleResponse {}
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct DeleteSystemRoleRequest {
-    pub id: String,
+    pub id: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]

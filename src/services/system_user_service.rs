@@ -1,60 +1,193 @@
-use tracing::field::debug;
+use tracing::error;
+
+use sea_orm::{EntityTrait, PaginatorTrait, QueryOrder, Set};
 
 use crate::{
-    cerror::CodeError,
+    cerror::{
+        user::ERR_USER_NOT_FOUND, CodeError, ERR_DATABASE_CONNECT_FAILED,
+        ERR_DATABASE_OPERATOR_FAILED,
+    },
+    constant::USER_STATUS_ACTIVE,
     dtos::system_user_dto::{
         CreateSystemUserRequest, CreateSystemUserResponse, DeleteSystemUserRequest,
         DeleteSystemUserResponse, GetSystemUserRequest, GetSystemUserResponse,
         ListSystemUserRequest, ListSystemUserResponse, PageSystemUserRequest,
-        PageSystemUserResponse, SystemUser, UpdateSystemUserRequest, UpdateSystemUserResponse,
+        PageSystemUserResponse, SystemUserDTO, UpdateSystemUserRequest, UpdateSystemUserResponse,
     },
+    entities::system_user::{self, ActiveModel, Entity as SystemUser},
+    utils::{db::DB, snowflake::generate_snowflake_id},
 };
 
 pub async fn list_system_user(
-    request: ListSystemUserRequest,
+    _request: ListSystemUserRequest,
 ) -> anyhow::Result<ListSystemUserResponse, CodeError> {
-    unimplemented!()
+    let conn = DB.get().ok_or(ERR_DATABASE_CONNECT_FAILED)?;
+
+    let system_users = SystemUser::find()
+        .order_by_desc(system_user::Column::CreateTime)
+        .all(conn)
+        .await
+        .map_err(|err| {
+            error!("list system user err: {:#?}", err);
+            ERR_DATABASE_OPERATOR_FAILED
+        })?;
+
+    Ok(ListSystemUserResponse {
+        data: system_users
+            .into_iter()
+            .map(|system_user| user_to_user_dto(system_user))
+            .collect(),
+    })
 }
 
 pub async fn page_system_user(
     request: PageSystemUserRequest,
 ) -> anyhow::Result<PageSystemUserResponse, CodeError> {
-    unimplemented!()
+    let conn = DB.get().ok_or(ERR_DATABASE_CONNECT_FAILED)?;
+
+    let total = SystemUser::find().count(conn).await.map_err(|err| {
+        error!("page system user count err: {:#?}", err);
+        ERR_DATABASE_OPERATOR_FAILED
+    })?;
+
+    let system_users = SystemUser::find()
+        .order_by_desc(system_user::Column::CreateTime)
+        .paginate(conn, request.page_size)
+        .fetch_page(request.page_index)
+        .await
+        .map_err(|err| {
+            error!("page system user err: {:#?}", err);
+            ERR_DATABASE_OPERATOR_FAILED
+        })?;
+
+    Ok(PageSystemUserResponse {
+        data: system_users
+            .into_iter()
+            .map(|system_user| user_to_user_dto(system_user))
+            .collect(),
+        total,
+    })
 }
 
 pub async fn get_system_user(
     request: GetSystemUserRequest,
 ) -> anyhow::Result<GetSystemUserResponse, CodeError> {
-    dbg!("get_system_user request: {:#?}", request);
+    let conn = DB.get().ok_or(ERR_DATABASE_CONNECT_FAILED)?;
+
+    let system_user = SystemUser::find_by_id(request.id)
+        .one(conn)
+        .await
+        .map_err(|err| {
+            error!("get system user err: {:#?}", err);
+            ERR_DATABASE_OPERATOR_FAILED
+        })?
+        .ok_or_else(|| {
+            error!("user: [{}] not found", &request.id);
+            ERR_USER_NOT_FOUND
+        })?;
+
     Ok(GetSystemUserResponse {
-        data: SystemUser {
-            id: "1".to_string(),
-            name: "test".to_string(),
-            nick_name: "test".to_string(),
-            email: "test@test.com".to_string(),
-            status: "active".to_string(),
-            avatar_url: "https://test.com/avatar.png".to_string(),
-        },
+        data: user_to_user_dto(system_user),
     })
 }
 
 pub async fn create_system_user(
     request: CreateSystemUserRequest,
 ) -> anyhow::Result<CreateSystemUserResponse, CodeError> {
-    dbg!("create_system_user request: {:#?}", request);
-    Ok(CreateSystemUserResponse {
-        id: "1".to_string(),
-    })
+    let conn = DB.get().ok_or(ERR_DATABASE_CONNECT_FAILED)?;
+
+    let id = generate_snowflake_id();
+    let system_user = system_user::ActiveModel {
+        id: Set(id),
+        name: Set(request.name),
+        nick_name: Set(request.nick_name),
+        email: Set(request.email),
+        status: Set(USER_STATUS_ACTIVE.to_owned()),
+        avatar_url: Set(request.avatar_url),
+        ..Default::default()
+    };
+
+    SystemUser::insert(system_user)
+        .exec(conn)
+        .await
+        .map_err(|err| {
+            error!("create system user err: {:#?}", err);
+            ERR_DATABASE_OPERATOR_FAILED
+        })?;
+
+    Ok(CreateSystemUserResponse { id })
 }
 
 pub async fn update_system_user(
     request: UpdateSystemUserRequest,
 ) -> anyhow::Result<UpdateSystemUserResponse, CodeError> {
-    unimplemented!()
+    let conn = DB.get().ok_or(ERR_DATABASE_CONNECT_FAILED)?;
+
+    let system_user = SystemUser::find_by_id(request.id)
+        .one(conn)
+        .await
+        .map_err(|err| {
+            error!("update system user err: {:#?}", err);
+            ERR_DATABASE_OPERATOR_FAILED
+        })?
+        .ok_or_else(|| {
+            error!("user: [{}] not found", &request.id);
+            ERR_USER_NOT_FOUND
+        })?;
+
+    let mut system_user: ActiveModel = system_user.into();
+    system_user.name = Set(request.name);
+    system_user.nick_name = Set(request.nick_name);
+    system_user.email = Set(request.email);
+    system_user.status = Set(USER_STATUS_ACTIVE.to_owned());
+    system_user.avatar_url = Set(request.avatar_url);
+
+    SystemUser::update(system_user)
+        .exec(conn)
+        .await
+        .map_err(|err| {
+            error!("update system user err: {:#?}", err);
+            ERR_DATABASE_OPERATOR_FAILED
+        })?;
+
+    Ok(UpdateSystemUserResponse {})
 }
 
 pub async fn delete_system_user(
     request: DeleteSystemUserRequest,
 ) -> anyhow::Result<DeleteSystemUserResponse, CodeError> {
-    unimplemented!()
+    let conn = DB.get().ok_or(ERR_DATABASE_CONNECT_FAILED)?;
+
+    SystemUser::find_by_id(request.id)
+        .one(conn)
+        .await
+        .map_err(|err| {
+            error!("find system user err: {:#?}", err);
+            ERR_DATABASE_OPERATOR_FAILED
+        })?
+        .ok_or_else(|| {
+            error!("user: [{}] not found", &request.id);
+            ERR_USER_NOT_FOUND
+        })?;
+
+    SystemUser::delete_by_id(request.id)
+        .exec(conn)
+        .await
+        .map_err(|err| {
+            error!("delete system user err: {:#?}", err);
+            ERR_DATABASE_OPERATOR_FAILED
+        })?;
+
+    Ok(DeleteSystemUserResponse {})
+}
+
+fn user_to_user_dto(user: system_user::Model) -> SystemUserDTO {
+    SystemUserDTO {
+        id: user.id,
+        name: user.name,
+        nick_name: user.nick_name,
+        email: user.email,
+        status: user.status,
+        avatar_url: user.avatar_url,
+    }
 }

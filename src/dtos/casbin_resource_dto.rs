@@ -2,15 +2,14 @@ use salvo::oapi::ToSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
-pub struct CasbinResource {
-    pub id: String,
+pub struct CasbinResourceDTO {
+    pub id: u64,
     pub name: String,
     pub resource_type: String,
     pub display_name: String,
     pub r#type: String,
-    pub resource_id: String,
-    pub create_time: String,
-    pub update_time: String,
+    pub resource_id: u64,
+    pub parent_id: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -18,28 +17,29 @@ pub struct ListCasbinResourceRequest {}
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ListCasbinResourceResponse {
-    pub data: Vec<CasbinResource>,
+    pub data: Vec<CasbinResourceDTO>,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct PageCasbinResourceRequest {
-    pub page_index: i32,
-    pub page_size: i32,
+    pub page_index: u64,
+    pub page_size: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct PageCasbinResourceResponse {
-    pub data: Vec<CasbinResource>,
+    pub data: Vec<CasbinResourceDTO>,
+    pub total: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct GetCasbinResourceRequest {
-    pub id: String,
+    pub id: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct GetCasbinResourceResponse {
-    pub data: Option<CasbinResource>,
+    pub data: CasbinResourceDTO,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -48,22 +48,24 @@ pub struct CreateCasbinResourceRequest {
     pub resource_type: String,
     pub display_name: String,
     pub r#type: String,
-    pub resource_id: String,
+    pub resource_id: u64,
+    pub parent_id: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct CreateCasbinResourceResponse {
-    pub id: String,
+    pub id: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct UpdateCasbinResourceRequest {
-    pub id: String,
-    pub name: Option<String>,
-    pub resource_type: Option<String>,
-    pub display_name: Option<String>,
-    pub r#type: Option<String>,
-    pub resource_id: Option<String>,
+    pub id: u64,
+    pub name: String,
+    pub resource_type: String,
+    pub display_name: String,
+    pub resource_id: u64,
+    pub r#type: String,
+    pub parent_id: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -71,7 +73,7 @@ pub struct UpdateCasbinResourceResponse {}
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct DeleteCasbinResourceRequest {
-    pub id: String,
+    pub id: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]

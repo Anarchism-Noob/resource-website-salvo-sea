@@ -7,12 +7,13 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "casbin_resource")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: String,
+    pub id: u64,
     pub name: String,
     pub resource_type: String,
     pub display_name: String,
     pub r#type: String,
-    pub resource_id: String,
+    pub resource_id: u64,
+    pub parent_id: u64,
     pub create_time: DateTime,
     pub update_time: DateTime,
 }
