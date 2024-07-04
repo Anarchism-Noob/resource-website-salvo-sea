@@ -9,7 +9,7 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: u64,
     pub name: String,
-    pub r#type: String,
+    pub code: String,
     pub desc: String,
     pub create_time: DateTime,
     pub update_time: DateTime,

@@ -1,4 +1,4 @@
-use salvo::{prelude::*, Response};
+use salvo::{http::request, prelude::*, Response};
 use tracing::error;
 
 use crate::{
@@ -50,7 +50,7 @@ pub async fn get_system_role(request: &mut Request, response: &mut Response) {
             failed(response, ERR_REQUEST_PARAM_INVALID);
         }
         Ok(request) => {
-            if request.id==0 {
+            if request.id == 0 {
                 error!("id is 0");
                 failed(response, ERR_REQUEST_PARAM_ERROR);
                 return;
@@ -75,8 +75,8 @@ pub async fn create_system_role(request: &mut Request, response: &mut Response) 
                 return;
             }
 
-            if request.r#type.trim().is_empty() {
-                error!("type is empty");
+            if request.code.trim().is_empty() {
+                error!("code is empty");
                 failed(response, ERR_REQUEST_PARAM_ERROR);
                 return;
             }
@@ -103,7 +103,7 @@ pub async fn update_system_role(request: &mut Request, response: &mut Response) 
             failed(response, ERR_REQUEST_PARAM_INVALID);
         }
         Ok(request) => {
-            if request.id==0{
+            if request.id == 0 {
                 error!("id is 0");
                 failed(response, ERR_REQUEST_PARAM_ERROR);
                 return;
@@ -115,8 +115,8 @@ pub async fn update_system_role(request: &mut Request, response: &mut Response) 
                 return;
             }
 
-            if request.r#type.trim().is_empty() {
-                error!("type is empty");
+            if request.code.trim().is_empty() {
+                error!("code is empty");
                 failed(response, ERR_REQUEST_PARAM_ERROR);
                 return;
             }
@@ -143,7 +143,7 @@ pub async fn delete_system_role(request: &mut Request, response: &mut Response) 
             failed(response, ERR_REQUEST_PARAM_INVALID);
         }
         Ok(request) => {
-            if request.id==0 {
+            if request.id == 0 {
                 error!("id is 0");
                 failed(response, ERR_REQUEST_PARAM_ERROR);
                 return;

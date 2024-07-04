@@ -1,21 +1,23 @@
+use casbin::RbacApi;
 use tracing::error;
 
 use sea_orm::{EntityTrait, PaginatorTrait, QueryOrder, Set};
 
 use crate::{
     cerror::{
-        user::ERR_USER_NOT_FOUND, CodeError, ERR_DATABASE_CONNECT_FAILED,
-        ERR_DATABASE_OPERATOR_FAILED,
+        rbac::ERR_RBAC_USER_ROLE_ADD_FAILED, user::ERR_USER_NOT_FOUND, CodeError,
+        ERR_DATABASE_CONNECT_FAILED, ERR_DATABASE_OPERATOR_FAILED,
     },
     constant::USER_STATUS_ACTIVE,
     dtos::system_user_dto::{
-        CreateSystemUserRequest, CreateSystemUserResponse, DeleteSystemUserRequest,
-        DeleteSystemUserResponse, GetSystemUserRequest, GetSystemUserResponse,
-        ListSystemUserRequest, ListSystemUserResponse, PageSystemUserRequest,
-        PageSystemUserResponse, SystemUserDTO, UpdateSystemUserRequest, UpdateSystemUserResponse,
+        CreateSystemUserRequest, CreateSystemUserResponse, CurentUserRequest, CurentUserResponse,
+        DeleteSystemUserRequest, DeleteSystemUserResponse, GetSystemUserRequest,
+        GetSystemUserResponse, ListSystemUserRequest, ListSystemUserResponse,
+        PageSystemUserRequest, PageSystemUserResponse, SystemUserDTO, UpdateSystemUserRequest,
+        UpdateSystemUserResponse,
     },
     entities::system_user::{self, ActiveModel, Entity as SystemUser},
-    utils::{db::DB, snowflake::generate_snowflake_id},
+    utils::{casbin::CASBIN, db::DB, snowflake::generate_snowflake_id},
 };
 
 pub async fn list_system_user(
@@ -115,6 +117,27 @@ pub async fn create_system_user(
             ERR_DATABASE_OPERATOR_FAILED
         })?;
 
+    if request.casbin_role_ids.len() > 0 {
+        let mut guard = CASBIN.write().await;
+        if let Some(ref mut enforcer) = *guard {
+            enforcer
+                .add_roles_for_user(
+                    id.to_string().as_str(),
+                    request
+                        .casbin_role_ids
+                        .iter()
+                        .map(|resource_id| resource_id.to_string())
+                        .collect::<Vec<String>>(),
+                    None,
+                )
+                .await
+                .map_err(|err| {
+                    error!("add role for user err: {:#?}", err);
+                    ERR_RBAC_USER_ROLE_ADD_FAILED
+                })?;
+        }
+    }
+
     Ok(CreateSystemUserResponse { id })
 }
 
@@ -179,6 +202,40 @@ pub async fn delete_system_user(
         })?;
 
     Ok(DeleteSystemUserResponse {})
+}
+
+pub async fn current_user(
+    request: CurentUserRequest,
+) -> anyhow::Result<CurentUserResponse, CodeError> {
+    let conn = DB.get().ok_or(ERR_DATABASE_CONNECT_FAILED)?;
+
+    let system_user = SystemUser::find_by_id(request.id)
+        .one(conn)
+        .await
+        .map_err(|err| {
+            error!("find system user err: {:#?}", err);
+            ERR_DATABASE_OPERATOR_FAILED
+        })?
+        .ok_or_else(|| {
+            error!("user: [{}] not found", &request.id);
+            ERR_USER_NOT_FOUND
+        })?;
+
+    let mut current_user_info = CurentUserResponse {
+        data: user_to_user_dto(system_user),
+        roles: vec![],
+        resources: vec![],
+    };
+
+    let mut guard = CASBIN.write().await;
+    if let Some(ref mut enforcer) = *guard {
+        current_user_info.roles =
+            enforcer.get_roles_for_user(request.id.to_string().as_str(), None);
+        current_user_info.resources =
+            enforcer.get_implicit_permissions_for_user(request.id.to_string().as_str(), None);
+    }
+
+    Ok(current_user_info)
 }
 
 fn user_to_user_dto(user: system_user::Model) -> SystemUserDTO {

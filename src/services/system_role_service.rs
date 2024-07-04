@@ -1,10 +1,12 @@
+use casbin::RbacApi;
 use sea_orm::{EntityTrait, PaginatorTrait, QueryOrder, Set};
 use tracing::error;
 
 use crate::{
     cerror::{
-        role::ERR_ROLE_NOT_FOUND, CodeError, ERR_DATABASE_CONNECT_FAILED,
-        ERR_DATABASE_OPERATOR_FAILED,
+        rbac::{ERR_RBAC_CASBIN_CONNECTION_FAILED, ERR_RBAC_ROLE_PERMISSION_ADD_FAILED},
+        role::ERR_ROLE_NOT_FOUND,
+        CodeError, ERR_DATABASE_CONNECT_FAILED, ERR_DATABASE_OPERATOR_FAILED,
     },
     dtos::system_role_dto::{
         CreateSystemRoleRequest, CreateSystemRoleResponse, DeleteSystemRoleRequest,
@@ -13,7 +15,7 @@ use crate::{
         PageSystemRoleResponse, SystemRoleDTO, UpdateSystemRoleRequest, UpdateSystemRoleResponse,
     },
     entities::system_role::{self, ActiveModel, Entity as SystemRole},
-    utils::{db::DB, snowflake::generate_snowflake_id},
+    utils::{casbin::CASBIN, db::DB, snowflake::generate_snowflake_id},
 };
 
 pub async fn list_system_role(
@@ -98,7 +100,7 @@ pub async fn create_system_role(
     let system_role = system_role::ActiveModel {
         id: Set(id),
         name: Set(request.name),
-        r#type: Set(request.r#type),
+        code: Set(request.code),
         desc: Set(request.desc),
         ..Default::default()
     };
@@ -110,6 +112,26 @@ pub async fn create_system_role(
             error!("create system role err: {:#?}", err);
             ERR_DATABASE_OPERATOR_FAILED
         })?;
+
+    if request.casbin_resource_ids.len() > 0 {
+        let mut guard = CASBIN.write().await;
+        if let Some(ref mut enforcer) = *guard {
+            enforcer
+                .add_permissions_for_user(
+                    id.to_string().as_str(),
+                    request
+                        .casbin_resource_ids
+                        .iter()
+                        .map(|resource_id| vec![resource_id.to_string()])
+                        .collect::<Vec<Vec<String>>>(),
+                )
+                .await
+                .map_err(|err| {
+                    error!("add permissions for role err: {:#?}", err);
+                    ERR_RBAC_ROLE_PERMISSION_ADD_FAILED
+                })?;
+        }
+    }
 
     Ok(CreateSystemRoleResponse { id })
 }
@@ -133,7 +155,7 @@ pub async fn update_system_role(
 
     let mut system_role: ActiveModel = system_role.into();
     system_role.name = Set(request.name);
-    system_role.r#type = Set(request.r#type);
+    system_role.code = Set(request.code);
     system_role.desc = Set(request.desc);
 
     SystemRole::update(system_role)
@@ -179,7 +201,7 @@ fn role_to_role_dto(role: system_role::Model) -> SystemRoleDTO {
     SystemRoleDTO {
         id: role.id,
         name: role.name,
-        r#type: role.r#type,
+        code: role.code,
         desc: role.desc,
     }
 }

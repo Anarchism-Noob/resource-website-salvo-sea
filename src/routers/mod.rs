@@ -11,8 +11,8 @@ use crate::controller::system_role_controller::{
     create_system_role, delete_system_role, get_system_role, page_system_role, update_system_role,
 };
 use crate::controller::system_user_controller::{
-    create_system_user, delete_system_user, get_system_user, list_system_user, page_system_user,
-    update_system_user,
+    create_system_user, current_user, delete_system_user, get_system_user, list_system_user,
+    page_system_user, update_system_user,
 };
 use crate::middleware::jwt::jwt_middleware;
 use crate::middleware::jwt_auth::jwt_auth_middleware;
@@ -114,6 +114,7 @@ pub fn router() -> Router {
                 .push(Router::with_path("/system-user/create").post(create_system_user))
                 .push(Router::with_path("/system-user/update").put(update_system_user))
                 .push(Router::with_path("/system-user/delete").delete(delete_system_user))
+                .push(Router::with_path("/system-user/current-user").get(current_user))
                 // system role router
                 .push(Router::with_path("/system-role/list").get(page_system_user))
                 .push(Router::with_path("/system-role/page").get(page_system_role))

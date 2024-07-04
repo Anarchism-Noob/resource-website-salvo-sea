@@ -1,6 +1,10 @@
 use salvo::oapi::ToSchema;
 use serde::{Deserialize, Serialize};
 
+use crate::entities::{casbin_resource, system_role};
+
+use super::{casbin_resource_dto, system_role_dto};
+
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct SystemUserDTO {
     pub id: u64,
@@ -47,6 +51,7 @@ pub struct CreateSystemUserRequest {
     pub nick_name: String,
     pub email: String,
     pub avatar_url: String,
+    pub casbin_role_ids: Vec<u64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -73,3 +78,17 @@ pub struct DeleteSystemUserRequest {
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct DeleteSystemUserResponse {}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct CurentUserRequest {
+    pub id: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct CurentUserResponse {
+    pub data: SystemUserDTO,
+    // pub roles: Vec<system_role_dto::SystemRoleDTO>,
+    pub roles: Vec<String>,
+    // pub resources: Vec<casbin_resource_dto::CasbinResourceDTO>,
+    pub resources: Vec<Vec<String>>,
+}

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub struct SystemRoleDTO {
     pub id: u64,
     pub name: String,
-    pub r#type: String,
+    pub code: String,
     pub desc: String,
 }
 
@@ -42,8 +42,9 @@ pub struct GetSystemRoleResponse {
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct CreateSystemRoleRequest {
     pub name: String,
-    pub r#type: String,
+    pub code: String,
     pub desc: String,
+    pub casbin_resource_ids: Vec<u64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -55,7 +56,7 @@ pub struct CreateSystemRoleResponse {
 pub struct UpdateSystemRoleRequest {
     pub id: u64,
     pub name: String,
-    pub r#type: String,
+    pub code: String,
     pub desc: String,
 }
 
