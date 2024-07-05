@@ -2,7 +2,10 @@ use crate::{
     middleware::{cors::cors_middleware, handle_404::handle_404},
     routers::router,
     services::admin_user_service::super_admin_init,
-    utils::{app_error, app_writer, db::init_db_conn, redis_utils::get_redis_connection},
+    utils::{
+        app_error, app_writer, casbin::init_casbin, db::init_db_conn,
+        redis_utils::get_redis_connection,
+    },
 };
 use config::{CERT_KEY, CFG};
 use salvo::{
@@ -21,11 +24,15 @@ mod middleware;
 mod routers;
 mod services;
 mod utils;
+mod common;
+mod cerror;
+mod constant;
 
 #[tokio::main]
 async fn main() {
     get_redis_connection().await;
     init_db_conn().await;
+    init_casbin().await;
 
     //At the same time, logs are only output to the terminal or file
     let _guard = clia_tracing_config::build()

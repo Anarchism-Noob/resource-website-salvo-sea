@@ -15,6 +15,7 @@
 */
 
 SET NAMES utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
@@ -121,15 +122,16 @@ CREATE TABLE `sys_carousel`  (
 -- Table structure for sys_image
 -- ----------------------------
 DROP TABLE IF EXISTS `sys_image`;
-CREATE TABLE `sys_image`  (
-  `image_uuid` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '图片唯一标识',
-  `image_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '图片名称',
-  `image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '图片存储路径或URL',
-  `image_to` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '跳转链接',
-  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '图片描述',
-  `usage_location` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '图片使用位置或功能标识',
-  PRIMARY KEY (`image_uuid`) USING BTREE,
-  INDEX `idx_usage_location`(`usage_location` ASC) USING BTREE
+
+CREATE TABLE `sys_image` (
+    `image_uuid` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '图片唯一标识',
+    `image_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '图片名称',
+    `image_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '图片存储路径或URL',
+    `image_to` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '跳转链接',
+    `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '图片描述',
+    `usage_location` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '图片使用位置或功能标识',
+    PRIMARY KEY (`image_uuid`) USING BTREE,
+    INDEX `idx_usage_location` (`usage_location` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '系统图片表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -302,5 +304,64 @@ CREATE TABLE `withdrawals`  (
 -- ----------------------------
 -- Records of withdrawals
 -- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `system_user` (
+    `id` BIGINT UNSIGNED PRIMARY KEY,
+    `name` varchar(64) NOT NULL DEFAULT '',
+    `nick_name` varchar(64) NOT NULL DEFAULT '',
+    `email` varchar(64) NOT NULL DEFAULT '',
+    `status` varchar(64) NOT NULL DEFAULT '',
+    `avatar_url` varchar(256) NOT NULL DEFAULT '',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COMMENT = '系统用户表';
+
+INSERT INTO system_user (id, name, nick_name, email, status, avatar_url, create_time, update_time) VALUES (7214658734583185408, 'super-admin', '超级管理员', 'super-admin@gmail.com', 'ACTIVE', 'https://super-admin.com', '2024-07-04 15:58:04', '2024-07-04 15:58:04');
+
+CREATE TABLE IF NOT EXISTS `system_role` (
+    `id` BIGINT UNSIGNED PRIMARY KEY,
+    `name` varchar(64) NOT NULL DEFAULT '',
+    `code` varchar(64) NOT NULL DEFAULT '',
+    `desc` varchar(64) NOT NULL DEFAULT '',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 comment '系统角色表';
+
+INSERT INTO system_role (id, name, code, `desc`, create_time, update_time) VALUES (7214658532828774400, '超级管理员', 'super-admin', 'http://super-admin.com', '2024-07-04 15:57:16', '2024-07-04 15:57:16');
+
+CREATE TABLE IF NOT EXISTS `casbin_rule` (
+    `id` INT PRIMARY KEY AUTO_INCREMENT,
+    `ptype` varchar(64) NOT NULL DEFAULT '',
+    `v0` varchar(256) NOT NULL DEFAULT '',
+    `v1` varchar(256) NOT NULL DEFAULT '',
+    `v2` varchar(256) NOT NULL DEFAULT '',
+    `v3` varchar(256) NOT NULL DEFAULT '',
+    `v4` varchar(256) NOT NULL DEFAULT '',
+    `v5` varchar(256) NOT NULL DEFAULT ''
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 COMMENT "权限规则表" AUTO_INCREMENT = 1000;
+
+INSERT INTO casbin_rule (id, ptype, v0, v1, v2, v3, v4, v5) VALUES (1, 'g', '7214658734583185408', '7214658532828774400', '', '', '', '');
+INSERT INTO casbin_rule (id, ptype, v0, v1, v2, v3, v4, v5) VALUES (2, 'p', '7214658532828774400', '7214612294024560640', '', '', '', '');
+INSERT INTO casbin_rule (id, ptype, v0, v1, v2, v3, v4, v5) VALUES (3, 'p', '7214658532828774400', '7214614466468511744', '', '', '', '');
+INSERT INTO casbin_rule (id, ptype, v0, v1, v2, v3, v4, v5) VALUES (4, 'p', '7214658532828774400', '7214614975921258496', '', '', '', '');
+INSERT INTO casbin_rule (id, ptype, v0, v1, v2, v3, v4, v5) VALUES (5, 'p', '7214658532828774400', '7214615051976572928', '', '', '', '');
+
+
+CREATE TABLE IF NOT EXISTS `casbin_resource` (
+    `id` BIGINT UNSIGNED PRIMARY KEY,
+    `name` varchar(256) NOT NULL DEFAULT '',
+    `resource_type` varchar(64) NOT NULL DEFAULT '',
+    `display_name` varchar(64) NOT NULL DEFAULT '',
+    `type` varchar(64) NOT NULL DEFAULT '',
+    `resource_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `parent_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE = InnoDB DEFAULT CHARSET = utf8 comment '权限资源表';
+
+INSERT INTO casbin_resource (id, name, resource_type, display_name, type, resource_id, parent_id, create_time, update_time) VALUES (7214612294024560640, 'SystemManage', '', '系统管理', 'SYSTEM_MENU', 0, 0, '2024-07-04 12:53:31', '2024-07-04 13:02:46');
+INSERT INTO casbin_resource (id, name, resource_type, display_name, type, resource_id, parent_id, create_time, update_time) VALUES (7214614466468511744, 'MonitorReport', '', '监控报表', 'SYSTEM_MENU', 0, 0, '2024-07-04 13:02:09', '2024-07-04 13:02:09');
+INSERT INTO casbin_resource (id, name, resource_type, display_name, type, resource_id, parent_id, create_time, update_time) VALUES (7214614975921258496, 'FileManage', '', '文件管理', 'SYSTEM_MENU', 0, 0, '2024-07-04 13:04:11', '2024-07-04 13:04:11');
+INSERT INTO casbin_resource (id, name, resource_type, display_name, type, resource_id, parent_id, create_time, update_time) VALUES (7214615051976572928, 'UserLog', '', '用户日志', 'SYSTEM_MENU', 0, 0, '2024-07-04 13:04:29', '2024-07-04 13:04:29');
 
 SET FOREIGN_KEY_CHECKS = 1;

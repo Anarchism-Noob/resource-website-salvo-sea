@@ -6,3 +6,6 @@ pub mod static_routers;
 pub mod sys_resources_controller;
 pub mod system_controller;
 pub mod website_controller;
+pub mod system_user_controller;
+pub mod system_role_controller;
+pub mod casbin_resource_controller;

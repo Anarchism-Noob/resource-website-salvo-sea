@@ -30,8 +30,8 @@ sea-orm = { version = "0.12.15", features = [
     "runtime-tokio-native-tls",
     "sqlx-mysql",
 ] }
-serde = "1.0.203"
-serde_yaml = "0.9.34+deprecated"
+serde = "1"
+serde_yaml = "0.9"
 thiserror = "1.0.57"
 time = "0.3.36"
 tokio = { version = "1.37.0", features = ["full"] }
@@ -44,3 +44,6 @@ bb8-redis = "0.15.0"
 chrono = "0.4.38"
 serde_json = "1.0.117"
 anychain-tron = "0.2.3"
+casbin = "2.2.0"
+sea-orm-adapter = "0.3.4"
+snowflaked = "1"

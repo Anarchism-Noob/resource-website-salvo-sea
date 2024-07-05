@@ -13,3 +13,6 @@ pub mod sys_resources_dto;
 pub mod sys_user_dto;
 pub mod sys_website_dto;
 pub mod withdrawals_dto;
+pub mod casbin_resource_dto;
+pub mod system_user_dto;
+pub mod system_role_dto;

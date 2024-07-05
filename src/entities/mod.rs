@@ -2,6 +2,8 @@
 
 pub mod prelude;
 
+pub mod casbin_resource;
+pub mod casbin_rule;
 pub mod count_data;
 pub mod custom_orders;
 pub mod custom_recharge;
@@ -15,4 +17,6 @@ pub mod sys_resource_language;
 pub mod sys_resources;
 pub mod sys_user;
 pub mod sys_website_info;
+pub mod system_role;
+pub mod system_user;
 pub mod withdrawals;
