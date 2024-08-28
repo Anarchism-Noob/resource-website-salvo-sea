@@ -2,7 +2,9 @@ use crate::config::CFG;
 use sea_orm::{entity::prelude::DatabaseConnection, ConnectOptions, Database};
 use std::time::Duration;
 use tokio::sync::OnceCell;
+
 pub static DB: OnceCell<DatabaseConnection> = OnceCell::const_new();
+
 pub async fn init_db_conn() {
     DB.get_or_init(|| async {
         let mut opt = ConnectOptions::new(CFG.database.database_url.to_owned());
